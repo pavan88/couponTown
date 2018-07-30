@@ -2,19 +2,37 @@ package com.coupontown;
 
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ExpandableListAdapter;
+import android.widget.ExpandableListView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class DashBoardActivty extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    ExpandableListView expandableListView;
+    ExpandableListAdapter expandableListAdapter;
+    List<String> expandableListTitle;
+    Map<String, List<String>> expandableListDetail;
+
+
+    ArrayAdapter<String> stringArrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +40,48 @@ public class DashBoardActivty extends AppCompatActivity
         setContentView(R.layout.activity_dash_board_activty);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
+        expandableListView = findViewById(R.id.viewid);
+        expandableListDetail = OfferList.getData();
+        expandableListTitle = new ArrayList<String>(expandableListDetail.keySet());
+        expandableListAdapter = new OfferListAdapter(this, expandableListTitle, expandableListDetail);
+        expandableListView.setAdapter(expandableListAdapter);
+        expandableListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+            @Override
+            public void onGroupExpand(int i) {
+                Toast.makeText(getApplicationContext(),
+                        expandableListTitle.get(i) + " List Expanded.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        expandableListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+            @Override
+            public void onGroupCollapse(int i) {
+                Toast.makeText(getApplicationContext(),
+                        expandableListTitle.get(i) + " List Collapsed.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
+                Toast.makeText(
+                        getApplicationContext(),
+                        expandableListTitle.get(i)
+                                + " -> "
+                                + expandableListDetail.get(
+                                expandableListTitle.get(i)).get(
+                                i1), Toast.LENGTH_SHORT
+                ).show();
+                return false;
+            }
+
+        });
+
+        stringArrayAdapter = new ArrayAdapter<String>(DashBoardActivty.this, android.R.layout.simple_expandable_list_item_1, expandableListTitle);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +116,23 @@ public class DashBoardActivty extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.dash_board_activty, menu);
+        MenuItem searchViewItem = menu.findItem(R.id.action_search);
+        final SearchView searchViewAndroidActionBar = (SearchView) searchViewItem.getActionView();
+
+        searchViewAndroidActionBar.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                //searchViewAndroidActionBar.clearFocus();
+                stringArrayAdapter.getFilter().filter(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                stringArrayAdapter.getFilter().filter(newText);
+                return true;
+            }
+        });
         return true;
     }
 
@@ -67,7 +144,7 @@ public class DashBoardActivty extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.mi_search) {
+        if (id == R.id.action_search) {
             return true;
         }
 
