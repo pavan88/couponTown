@@ -77,9 +77,19 @@ public class DashBoardActivty extends AppCompatActivity
                                 i1), Toast.LENGTH_SHORT
                 ).show();
                 final String appPackageName = getPackageName();
-                Log.i("Package Name" , appPackageName);
+                Intent intent = getPackageManager().getLaunchIntentForPackage("net.one97.paytm");
+                if (intent != null) {
+                    // We found the activity now start the activity
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } else {
+                    // Bring user to the market or let them choose an app?
+                    intent = new Intent(Intent.ACTION_VIEW);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setData(Uri.parse("market://details?id=" + "net.one97.paytm"));
+                    startActivity(intent);
+                }
 
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://paytm.com")));
                 return false;
             }
 
@@ -181,5 +191,19 @@ public class DashBoardActivty extends AppCompatActivity
     }
 
 
-  
+    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+
+        Log.i("List Position:" , String.valueOf(position));
+
+        Intent indentActivity = new Intent(DashBoardActivty.this, OfferActivity.class);
+        startActivity(indentActivity);
+
+    }
+
+
+    public boolean onChildClick(ExpandableListView expandableListView, View view, int groupPostion, int childPosition, long l) {
+        Log.i("Group Position:" , String.valueOf(groupPostion));
+        Log.i("Child Position:" , String.valueOf(childPosition));
+        return true;
+    }
 }

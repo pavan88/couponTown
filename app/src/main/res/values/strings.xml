@@ -22,4 +22,8 @@
     <string name="title_activity_search">SearchActivity</string>
     <string name="title_activity_dash_board_activty">DashBoardActivty</string>
     <string name="app_label">Search</string>
+
+    <string name="facebook_app_id">2125011654439424</string>
+    <string name="fb_login_protocol_scheme">fb2125011654439424</string>
+
 </resources>
