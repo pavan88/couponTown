@@ -18,13 +18,22 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.*;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -57,6 +66,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
 
+
+    private LoginButton loginButton;
+    private CallbackManager callbackManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +77,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Set up the login form.
         mEmailView = findViewById(R.id.email);
         populateAutoComplete();
+
+        callbackManager = CallbackManager.Factory.create();
+
 
         mPasswordView = findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -77,7 +93,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
 
-        
 
         Button mEmailSignInButton = findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
@@ -89,6 +104,34 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+        FacebookSdk.sdkInitialize(getApplication());
+
+        loginButton = findViewById(R.id.login_button);
+        loginButton.setReadPermissions("email", "public_profile");
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile"));
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                String userId = loginResult.getAccessToken().getUserId();
+                Log.i("UserId", userId);
+                Intent intent
+                        = new Intent(LoginActivity.this, DashBoardActivty.class);
+                startActivity(intent);
+                Log.i("start:onFacebookLogin", "**********Starting********");
+                finish();
+
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+
+            }
+        });
     }
 
     private void populateAutoComplete() {
@@ -332,7 +375,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             if (success) {
                 // finish();
                 //Call another Activity.
-               Intent intent = new Intent(LoginActivity.this, DashBoardActivty.class);
+                Intent intent = new Intent(LoginActivity.this, DashBoardActivty.class);
                 intent.putExtra("success", mEmail);
                 startActivity(intent);
 
@@ -347,6 +390,20 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = null;
             showProgress(false);
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.i("resultCode", String.valueOf(resultCode));
+        Log.i("requestCode", String.valueOf(requestCode));
+
+        super.onActivityResult(requestCode, resultCode, data);
+        return;
+
+
+
+        // super.onActivityResult(requestCode, resultCode, data);
     }
 }
 
