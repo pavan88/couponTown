@@ -75,7 +75,7 @@
             <Button
                     android:text="@string/action_register"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:id="@+id/login_id"/>
+                    android:layout_height="wrap_content" android:id="@+id/register"/>
 
             <com.facebook.login.widget.LoginButton
                     android:id="@+id/login_button"

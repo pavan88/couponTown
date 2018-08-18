@@ -60,6 +60,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private LoginButton loginButton;
     private CallbackManager callbackManager;
 
+    private Button registerButton;
+
     public boolean isLoggedIn() {
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         return accessToken != null;
@@ -72,12 +74,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         if (isLoggedIn()) {
             Log.i("login", "User Already Logged in");
             Intent intent
-                    = new Intent(LoginActivity.this, DashBoardActivty.class);
+                    = new Intent(LoginActivity.this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             Log.i("start:onFacebookLogin", "**********Starting********");
             finish();
-
 
         }
         setContentView(R.layout.activity_login);
@@ -96,6 +97,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     return true;
                 }
                 return false;
+            }
+        });
+        registerButton = findViewById(R.id.register);
+        registerButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                attemptRegister();
             }
         });
 
@@ -124,7 +132,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 String userId = loginResult.getAccessToken().getUserId();
                 Log.i("UserId", userId);
                 Intent intent
-                        = new Intent(LoginActivity.this, DashBoardActivty.class);
+                        = new Intent(LoginActivity.this, MainActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 Log.i("start:onFacebookLogin", "**********Starting********");
@@ -142,6 +150,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             }
         });
+    }
+
+    private void attemptRegister() {
+        Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+       
+        startActivity(intent);
     }
 
 
@@ -342,7 +356,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             if (success) {
                 // finish();
                 //Call another Activity.
-                Intent intent = new Intent(LoginActivity.this, DashBoardActivty.class);
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 intent.putExtra("success", mEmail);
                 startActivity(intent);
 
