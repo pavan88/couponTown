@@ -15,18 +15,6 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity
-                android:name=".LoginActivity"
-                android:label="@string/app_name">
-        </activity>
-        <activity
-                android:name=".DashBoardActivty"
-                android:label="@string/title_activity_dash_board_activty"
-                android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                    android:name="android.app.searchable"
-                    android:resource="@xml/searchable"/>
-        </activity>
         <activity android:name=".WelcomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -34,9 +22,9 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name=".OfferActivity">
-        </activity>
-        <activity android:name=".MainActivity">
+        <activity
+                android:name=".LoginActivity"
+                android:label="@string/title_activity_login">
         </activity>
 
         <meta-data
@@ -59,7 +47,14 @@
                 <data android:scheme="@string/fb_login_protocol_scheme"/>
             </intent-filter>
         </activity>
-        <activity android:name=".RegisterActivity">
+        <activity
+                android:name=".DashBoardActivity"
+                android:label="@string/app_name"
+                android:parentActivityName=".LoginActivity"
+                android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value="com.coupontown.LoginActivity"/>
         </activity>
     </application>
 
