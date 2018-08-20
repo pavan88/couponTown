@@ -3,6 +3,7 @@ package com.coupontown;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.CursorLoader;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.widget.*;
 import com.facebook.*;
@@ -62,10 +64,19 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private Button registerButton;
 
+    LinearLayout layoutOfPopup;
+    PopupWindow popupMessage;
+    Button popupButton, insidePopupButton;
+    TextView popupText;
+
+
     public boolean isLoggedIn() {
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         return accessToken != null;
     }
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,7 +96,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Set up the login form.
         mEmailView = findViewById(R.id.email);
 
-        callbackManager = CallbackManager.Factory.create();
+
 
 
         mPasswordView = findViewById(R.id.password);
@@ -119,10 +130,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
 
+
+        //Facebook Login
         if (FacebookSdk.isInitialized()) {
             Log.i("SDK intilization", "True");
         }
 
+        callbackManager = CallbackManager.Factory.create();
         loginButton = findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile");
 
@@ -154,7 +168,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private void attemptRegister() {
         Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
-       
+
         startActivity(intent);
     }
 
