@@ -2,11 +2,13 @@ package com.coupontown;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.FaceDetector;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,20 +22,21 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.coupontown.api.AndroidVersion;
+import com.coupontown.api.JSONResponse;
+import com.coupontown.api.RequestInterface;
 import com.coupontown.model.FacebookResponse;
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.Profile;
-import com.facebook.internal.LockOnGetVariable;
 import com.facebook.login.LoginManager;
-import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
-import org.json.JSONException;
 import org.json.JSONObject;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class DashBoardActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -45,6 +48,13 @@ public class DashBoardActivity extends AppCompatActivity
     ImageView user_picture;
     NavigationView navigation_view;
 
+    //Search API
+
+    public static final String BASE_URL = "https://api.learn2crack.com";
+    private RecyclerView mRecyclerView;
+    private ArrayList<AndroidVersion> mArrayList;
+    private DataAdapter mAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,13 +64,13 @@ public class DashBoardActivity extends AppCompatActivity
 
 
         Intent intent = getIntent();
+
         String jsondata = intent.getStringExtra("jsondata");
-        setNavigationHeader();    // call setNavigationHeader Method.<br />
+
+        setNavigationHeader();
         if (jsondata != null) {
             Log.i("success", jsondata);
-
-            setUserProfile(jsondata);  // call setUserProfile Method.</p>
-
+            setUserProfile(jsondata);
         }
 
 
@@ -81,7 +91,44 @@ public class DashBoardActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        initViews();
+        loadJSON();
     }
+
+    private void initViews(){
+        mRecyclerView = (RecyclerView)findViewById(R.id.card_recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(layoutManager);
+    }
+
+
+    private void loadJSON(){
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        RequestInterface request = retrofit.create(RequestInterface.class);
+        Call<JSONResponse> call = request.getJSON();
+        call.enqueue(new Callback<JSONResponse>() {
+            @Override
+            public void onResponse(Call<JSONResponse> call, Response<JSONResponse> response) {
+
+                JSONResponse jsonResponse = response.body();
+                mArrayList = new ArrayList<>(Arrays.asList(jsonResponse.getAndroid()));
+                mAdapter = new DataAdapter(mArrayList);
+                mRecyclerView.setAdapter(mAdapter);
+                Log.i("json" , mArrayList.toString());
+            }
+
+            @Override
+            public void onFailure(Call<JSONResponse> call, Throwable t) {
+                Log.d("Error",t.getMessage());
+            }
+        });
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -114,7 +161,6 @@ public class DashBoardActivity extends AppCompatActivity
     }
 
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -134,7 +180,31 @@ public class DashBoardActivity extends AppCompatActivity
             return true;
         }
 
+        if (id == R.id.action_search) {
+            SearchView search = (SearchView) item.getActionView();
+            Log.i("searchView", search.toString());
+            search(search);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void search(SearchView searchView) {
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                mAdapter.getFilter().filter(newText);
+                return true;
+            }
+        });
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
