@@ -1,10 +1,12 @@
 package com.coupontown;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.FaceDetector;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +26,7 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.internal.LockOnGetVariable;
+import com.facebook.login.LoginManager;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 import org.json.JSONException;
@@ -52,9 +55,13 @@ public class DashBoardActivity extends AppCompatActivity
 
         Intent intent = getIntent();
         String jsondata = intent.getStringExtra("jsondata");
-        Log.i("success", jsondata);
         setNavigationHeader();    // call setNavigationHeader Method.<br />
-        setUserProfile(jsondata);  // call setUserProfile Method.</p>
+        if (jsondata != null) {
+            Log.i("success", jsondata);
+
+            setUserProfile(jsondata);  // call setUserProfile Method.</p>
+
+        }
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -82,9 +89,31 @@ public class DashBoardActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+
+            AlertDialog.Builder alertbox = new AlertDialog.Builder(DashBoardActivity.this);
+            alertbox.setIcon(R.drawable.com_facebook_button_icon);
+            alertbox.setTitle("You Want To Logout ?");
+            alertbox.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface arg0, int arg1) {
+                    // finish used for destroyed activity
+                    LoginManager.getInstance().logOut();
+                    finish();
+                }
+            });
+
+            alertbox.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface arg0, int arg1) {
+                    // Nothing will be happened when clicked on no button
+                    // of Dialog
+                }
+            });
+
+            alertbox.show();
         }
+        // super.onBackPressed();
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -124,7 +153,11 @@ public class DashBoardActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_share) {
 
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.logout) {
+            LoginManager.getInstance().logOut();
+            Intent loginIntent = new Intent(DashBoardActivity.this, LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
 
         }
 
