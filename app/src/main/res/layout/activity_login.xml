@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
@@ -8,7 +9,7 @@
               android:paddingLeft="@dimen/activity_horizontal_margin"
               android:paddingRight="@dimen/activity_horizontal_margin"
               android:paddingTop="@dimen/activity_vertical_margin"
-              tools:context="com.coupontown.LoginActivity">
+              tools:context=".LoginActivity">
 
     <!-- Login progress -->
     <ProgressBar
@@ -71,6 +72,15 @@
                     android:layout_marginTop="16dp"
                     android:text="@string/action_sign_in"
                     android:textStyle="bold"/>
+
+            <com.facebook.login.widget.LoginButton
+                    android:id="@+id/login_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="30dp"
+                    android:text="login with facebook"
+                    android:layout_marginBottom="30dp"/>
 
         </LinearLayout>
     </ScrollView>

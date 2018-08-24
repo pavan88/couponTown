@@ -1,28 +1,40 @@
+
 package com.coupontown;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.app.LoaderManager.LoaderCallbacks;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.app.LoaderManager.LoaderCallbacks;
+
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.AsyncTask;
+
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import com.facebook.*;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,15 +69,33 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
 
+    //Facebook
+    CallbackManager callbackManager;
+
+    public boolean isLoggedIn() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        return accessToken != null;
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (isLoggedIn()) {
+            Log.i("login", "User Already Logged in");
+            Intent intent
+                    = new Intent(LoginActivity.this, DashBoardActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+
+        }
         setContentView(R.layout.activity_login);
         // Set up the login form.
-        mEmailView = findViewById(R.id.email);
+        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
-        mPasswordView = findViewById(R.id.password);
+        mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -77,7 +107,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
 
-        Button mEmailSignInButton = findViewById(R.id.email_sign_in_button);
+        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -87,6 +117,73 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
+
+        facebookSDKInitialize();
+        LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
+        loginButton.setReadPermissions("email");
+        getLoginDetails(loginButton);
+    }
+
+    /*
+       Initialize the facebook sdk and then callback manager will handle the login responses.
+    */
+    protected void facebookSDKInitialize() {
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        callbackManager = CallbackManager.Factory.create();
+    }
+
+    /*
+    Register a callback function with LoginButton to respond to the login result.
+    On successful login,login result has new access token and  recently granted permissions.
+    */
+    protected void getLoginDetails(LoginButton login_button) {
+        // Callback registration
+        login_button.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult login_result) {
+                getUserInfo(login_result);
+            }
+
+            @Override
+            public void onCancel() {
+                // code for cancellation
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                //  code to handle error
+            }
+        });
+    }
+
+    /*
+        To get the facebook user's own profile information via  creating a new request.
+        When the request is completed, a callback is called to handle the success condition.
+     */
+    protected void getUserInfo(LoginResult login_result) {
+        GraphRequest data_request = GraphRequest.newMeRequest(
+                login_result.getAccessToken(),
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(
+                            JSONObject json_object,
+                            GraphResponse response) {
+                        Intent intent = new Intent(LoginActivity.this, DashBoardActivity.class);
+                        intent.putExtra("jsondata", json_object.toString());
+                        startActivity(intent);
+                    }
+                });
+        Bundle permission_param = new Bundle();
+        permission_param.putString("fields", "id,name,email,picture.width(120).height(120)");
+        data_request.setParameters(permission_param);
+        data_request.executeAsync();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.e("data", data.toString());
     }
 
     private void populateAutoComplete() {
@@ -328,12 +425,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                // finish();
-                //Call another Activity.
-               Intent intent = new Intent(LoginActivity.this, DashBoardActivty.class);
-                intent.putExtra("success", mEmail);
+                Intent intent = new Intent(LoginActivity.this, DashBoardActivity.class);
                 startActivity(intent);
-
+                finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
@@ -347,4 +441,3 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 }
-
