@@ -1,443 +1,386 @@
-
 package com.coupontown;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.annotation.TargetApi;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.app.LoaderManager.LoaderCallbacks;
-
-import android.content.CursorLoader;
-import android.content.Loader;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.AsyncTask;
-
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.inputmethod.EditorInfo;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+import com.coupontown.model.UserProfile;
 import com.facebook.*;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.*;
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
-import static android.Manifest.permission.READ_CONTACTS;
 
-/**
- * A login screen that offers login via email/password.
- */
-public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
+    //Email
+    private Button loginbutton;
+    private EditText email;
+    private EditText password;
 
-    /**
-     * Id to identity READ_CONTACTS permission request.
-     */
-    private static final int REQUEST_READ_CONTACTS = 0;
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-    /**
-     * Keep track of the login task to ensure we can cancel it if requested.
-     */
-    private UserLoginTask mAuthTask = null;
+    FirebaseAuth firebaseAuth;
 
-    // UI references.
-    private AutoCompleteTextView mEmailView;
-    private EditText mPasswordView;
-    private View mProgressView;
-    private View mLoginFormView;
+    private static final String FB_TAG = "FacebookLogin";
+    private static final String G_TAG = "GoogleLogin";
+    private static final String E_TAG = "EmailLogin";
+
+
+    //Google
+    private static final int RC_SIGN_IN = 9001;
+    private GoogleSignInClient mGoogleSignInClient;
+    private SignInButton g_loginButton;
 
     //Facebook
-    CallbackManager callbackManager;
+    //Facebook Login
+    private LoginButton fb_loginButton;
+    private CallbackManager callbackManager;
 
-    public boolean isLoggedIn() {
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        return accessToken != null;
-    }
+
+    Intent intent;
+
+    TextView resetPassword;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (isLoggedIn()) {
-            Log.i("login", "User Already Logged in");
-            Intent intent
-                    = new Intent(LoginActivity.this, DashBoardActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
+        setContentView(R.layout.activity_login);
+
+        Toolbar toolbar
+                = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        //Email Based Login Initializations Button
+
+        loginbutton = findViewById(R.id.buttonLogin);
+
+        email = findViewById(R.id.email);
+
+        password = findViewById(R.id.password);
+
+        loginbutton.setOnClickListener(this);
+
+        g_loginButton = findViewById(R.id.g_loginButton);
+        g_loginButton.setOnClickListener(this);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail().requestProfile()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+
+        // Facebook Login Initializations
+        callbackManager = CallbackManager.Factory.create();
+        fb_loginButton = findViewById(R.id.fb_loginButton);
+        fb_loginButton.setOnClickListener(this);
+
+
+        //Reset Password
+        resetPassword = findViewById(R.id.resetPassword);
+        resetPassword.setOnClickListener(this);
+
+        intent = new Intent(this, HomeActivity.class);
+
+    }
+
+
+    @Override
+    public void onClick(View view) {
+
+        if (view == loginbutton) {
+            Log.d(E_TAG, "Sign Method using Normal Options");
+            loginExistingUser();
+        }
+
+        if (view == g_loginButton) {
+            Log.d(G_TAG, "Sign Method using Gmail Options");
+            signInUsingGoogle();
+        }
+
+        if (view == fb_loginButton) {
+            Log.d(G_TAG, "Sign Method using Facebook Options");
+            signInUsingFacebook();
+        }
+
+        if (view == resetPassword) {
+            Log.d("Reset", "Reset the password");
+            resetPassword();
+        }
+
+
+    }
+
+    private void resetPassword() {
+        final String emailStr = email.getText().toString().trim();
+
+        if (TextUtils.isEmpty(emailStr)) {
+            email.setError("Enter email address to reset password");
+            Toast.makeText(getApplicationContext(), "Enter your registered email id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        firebaseAuth.sendPasswordResetEmail(emailStr)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(getApplicationContext(), "We have sent you instructions to reset your password!", Toast.LENGTH_LONG).show();
+                            startActivity(getIntent());
+                        } else {
+                            Toast.makeText(getApplicationContext(), "Failed to send reset email!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+    }
+
+
+    /// Activity validation for Facebook and Gmail
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+        if (requestCode == RC_SIGN_IN) {
+            final UserProfile guserProfile = new UserProfile();
+
+
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            // Google Sign In was successful, authenticate with Firebase
+            GoogleSignInAccount account = task.getResult();
+            guserProfile.setEmail(account.getEmail());
+
+            AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+
+            firebaseAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getApplicationContext(), "Login Success via Gmail", Toast.LENGTH_LONG).show();
+                        setuserProfile(guserProfile);
+
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.i(G_TAG, "Sign in using gmail failed", task.getException());
+                        signOut();
+                    }
+
+                }
+            });
+        } else {
+            // Pass the activity result back to the Facebook SDK
+            callbackManager.onActivityResult(requestCode, resultCode, data);
 
         }
-        setContentView(R.layout.activity_login);
-        // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        populateAutoComplete();
+    }
 
-        mPasswordView = (EditText) findViewById(R.id.password);
-        mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+
+    private void loginExistingUser() {
+        final String emailStr = email.getText().toString().trim();
+        final String passwordStr = password.getText().toString().trim();
+
+        if (TextUtils.isEmpty(emailStr)) {
+            email.setError("Enter email address!");
+            Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(passwordStr)) {
+            password.setError("Enter password!");
+            Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+
+        //1. Check email exists
+        firebaseAuth.fetchSignInMethodsForEmail(emailStr).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<SignInMethodQueryResult>() {
             @Override
-            public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
-                if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-                    attemptLogin();
-                    return true;
+            public void onComplete(@NonNull Task<SignInMethodQueryResult> task) {
+
+                boolean emailexists;
+                emailexists = task.getResult().getSignInMethods().isEmpty();
+                if (emailexists) {
+                    registeruser(emailStr, passwordStr);
+                } else {
+                    //User Exists , So sign in
+                    signin(emailStr, passwordStr);
                 }
-                return false;
             }
         });
+    }
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
+    //User Existing. So login with valid credentails.
+    private void signin(final String emailStr, final String passwordStr) {
+        firebaseAuth.signInWithEmailAndPassword(emailStr, passwordStr).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
             @Override
-            public void onClick(View view) {
-                attemptLogin();
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if (!task.isSuccessful()) {
+                    Toast.makeText(getApplicationContext(), "Please verify the email/password", Toast.LENGTH_LONG).show();
+                    task.getException();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Login Success via Email & Password", Toast.LENGTH_LONG).show();
+                    UserProfile userProfile = new UserProfile();
+                    userProfile.setEmail(emailStr);
+                    setuserProfile(userProfile);
+                }
+
             }
         });
-
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
-
-        facebookSDKInitialize();
-        LoginButton loginButton = (LoginButton) findViewById(R.id.login_button);
-        loginButton.setReadPermissions("email");
-        getLoginDetails(loginButton);
     }
 
-    /*
-       Initialize the facebook sdk and then callback manager will handle the login responses.
-    */
-    protected void facebookSDKInitialize() {
-        FacebookSdk.sdkInitialize(getApplicationContext());
-        callbackManager = CallbackManager.Factory.create();
+
+    //Check User exists, if not register
+    private void registeruser(final String emailStr, final String passwordStr) {
+        firebaseAuth.createUserWithEmailAndPassword(emailStr, passwordStr)
+                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
+                            task.getException();
+                        } else {
+                            Toast.makeText(LoginActivity.this, "User Email Created", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+        startActivity(getIntent());
+        finish();
     }
 
-    /*
-    Register a callback function with LoginButton to respond to the login result.
-    On successful login,login result has new access token and  recently granted permissions.
-    */
-    protected void getLoginDetails(LoginButton login_button) {
-        // Callback registration
-        login_button.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+
+    //***********GMAIL LOGIN PROCESS ************//
+    private void signInUsingGoogle() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+
+    //***********Facebook LOGIN PROCESS ************//
+
+    private void signInUsingFacebook() {
+        fb_loginButton.setReadPermissions("email", "public_profile");
+
+        fb_loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
-            public void onSuccess(LoginResult login_result) {
-                getUserInfo(login_result);
+            public void onSuccess(LoginResult loginResult) {
+
+                handleFacebookAccessToken(loginResult.getAccessToken());
             }
 
             @Override
             public void onCancel() {
-                // code for cancellation
+
             }
 
             @Override
-            public void onError(FacebookException exception) {
-                //  code to handle error
+            public void onError(FacebookException error) {
+                Log.e(FB_TAG, "Error" + error.toString());
             }
         });
     }
 
-    /*
-        To get the facebook user's own profile information via  creating a new request.
-        When the request is completed, a callback is called to handle the success condition.
-     */
-    protected void getUserInfo(LoginResult login_result) {
+    private void handleFacebookAccessToken(AccessToken token) {
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        firebaseAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+
+                            goMainScreenViaFB();
+
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(FB_TAG, "signInWithCredential:failure", task.getException());
+                            Toast.makeText(getApplicationContext(), "Authentication failed via facebook",
+                                    Toast.LENGTH_LONG).show();
+                        }
+
+                        // ...
+                    }
+                });
+    }
+
+    private void goMainScreenViaFB() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        if (accessToken == null) return;
         GraphRequest data_request = GraphRequest.newMeRequest(
-                login_result.getAccessToken(),
+                accessToken,
                 new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(
                             JSONObject json_object,
                             GraphResponse response) {
-                        Intent intent = new Intent(LoginActivity.this, DashBoardActivity.class);
-                        intent.putExtra("jsondata", json_object.toString());
-                        startActivity(intent);
+                        UserProfile userProfile = new UserProfile();
+                        try {
+                            userProfile.setEmail(json_object.getString("email"));
+                            setuserProfile(userProfile);
+                        } catch (JSONException e) {
+                            Toast.makeText(getApplicationContext(), "Authentication failed via facebook",
+                                    Toast.LENGTH_LONG).show();
+                            signOut();
+                            e.printStackTrace();
+                        }
+
                     }
                 });
         Bundle permission_param = new Bundle();
-        permission_param.putString("fields", "id,name,email,picture.width(120).height(120)");
+        // permission_param.putString("fields", "id,name,email,picture.width(500).height(500)");
+        permission_param.putString("fields", "id,name,email,picture.width(200).height(200)");
         data_request.setParameters(permission_param);
         data_request.executeAsync();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-        Log.e("data", data.toString());
-    }
+    private void setuserProfile(UserProfile userProfile) {
 
-    private void populateAutoComplete() {
-        if (!mayRequestContacts()) {
-            return;
-        }
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        //Check user isnew
+        //is Email Verified -> NO then new
 
-        getLoaderManager().initLoader(0, null, this);
-    }
 
-    private boolean mayRequestContacts() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (checkSelfPermission(READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        }
-        if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
-            Snackbar.make(mEmailView, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
-                    .setAction(android.R.string.ok, new View.OnClickListener() {
-                        @Override
-                        @TargetApi(Build.VERSION_CODES.M)
-                        public void onClick(View v) {
-                            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-                        }
-                    });
-        } else {
-            requestPermissions(new String[]{READ_CONTACTS}, REQUEST_READ_CONTACTS);
-        }
-        return false;
-    }
+        //Log.i(G_TAG, user.getEmail());
+        if (user != null) {
+            userProfile.setPhonenumber(user.getPhoneNumber());
+            userProfile.setProvider(user.getProviders().get(0));
+            userProfile.setFull_name(user.getDisplayName());
+            userProfile.setProfile_pic(user.getPhotoUrl());
+            userProfile.setUid(user.getUid());
+            userProfile.isVerified(user.isEmailVerified());
 
-    /**
-     * Callback received when a permissions request has been completed.
-     */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_READ_CONTACTS) {
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                populateAutoComplete();
-            }
+            intent.putExtra("profile", userProfile);
+
+            Log.i(G_TAG, userProfile.toString());
+
+            startActivity(intent);
+            finish();
         }
     }
 
-
-    /**
-     * Attempts to sign in or register the account specified by the login form.
-     * If there are form errors (invalid email, missing fields, etc.), the
-     * errors are presented and no actual login attempt is made.
-     */
-    private void attemptLogin() {
-        if (mAuthTask != null) {
-            return;
-        }
-
-        // Reset errors.
-        mEmailView.setError(null);
-        mPasswordView.setError(null);
-
-        // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
-        String password = mPasswordView.getText().toString();
-
-        boolean cancel = false;
-        View focusView = null;
-
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
-        }
-
-        if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
-            focusView.requestFocus();
-        } else {
-            // Show a progress spinner, and kick off a background task to
-            // perform the user login attempt.
-            showProgress(true);
-            mAuthTask = new UserLoginTask(email, password);
-            mAuthTask.execute((Void) null);
-        }
-    }
-
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
-    }
-
-    private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-        return password.length() > 4;
-    }
-
-    /**
-     * Shows the progress UI and hides the login form.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
-        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
-        // for very easy animations. If available, use these APIs to fade-in
-        // the progress spinner.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-            mLoginFormView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-                }
-            });
-
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mProgressView.animate().setDuration(shortAnimTime).alpha(
-                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                }
-            });
-        } else {
-            // The ViewPropertyAnimator APIs are not available, so simply show
-            // and hide the relevant UI components.
-            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
-    }
-
-    @Override
-    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        return new CursorLoader(this,
-                // Retrieve data rows for the device user's 'profile' contact.
-                Uri.withAppendedPath(ContactsContract.Profile.CONTENT_URI,
-                        ContactsContract.Contacts.Data.CONTENT_DIRECTORY), ProfileQuery.PROJECTION,
-
-                // Select only email addresses.
-                ContactsContract.Contacts.Data.MIMETYPE +
-                        " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-                .CONTENT_ITEM_TYPE},
-
-                // Show primary email addresses first. Note that there won't be
-                // a primary email address if the user hasn't specified one.
-                ContactsContract.Contacts.Data.IS_PRIMARY + " DESC");
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        List<String> emails = new ArrayList<>();
-        cursor.moveToFirst();
-        while (!cursor.isAfterLast()) {
-            emails.add(cursor.getString(ProfileQuery.ADDRESS));
-            cursor.moveToNext();
-        }
-
-        addEmailsToAutoComplete(emails);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> cursorLoader) {
-
-    }
-
-    private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
-        //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
-        ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(LoginActivity.this,
-                        android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-
-        mEmailView.setAdapter(adapter);
-    }
-
-
-    private interface ProfileQuery {
-        String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
-
-        int ADDRESS = 0;
-        int IS_PRIMARY = 1;
-    }
-
-    /**
-     * Represents an asynchronous login/registration task used to authenticate
-     * the user.
-     */
-    public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
-        private final String mEmail;
-        private final String mPassword;
-
-        UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
-            try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
-            }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mEmail)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            mAuthTask = null;
-            showProgress(false);
-
-            if (success) {
-                Intent intent = new Intent(LoginActivity.this, DashBoardActivity.class);
-                startActivity(intent);
-                finish();
-            } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            mAuthTask = null;
-            showProgress(false);
-        }
+    private void signOut() {
+        firebaseAuth.getInstance().signOut();
+        firebaseAuth.signOut();
     }
 }
