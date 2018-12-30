@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ProfileActivity">
+    <include layout="@layout/toolbar"/>
+
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text="FirstName"
+            android:ems="10"
+            android:id="@+id/firstname" android:layout_marginEnd="85dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="84dp" android:hint="firstname"
+            app:layout_constraintBottom_toTopOf="@+id/lastname" app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="32dp" app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintVertical_bias="0.967"/>
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text="LastName"
+            android:ems="10"
+            android:id="@+id/lastname" android:layout_marginEnd="85dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="84dp" android:hint="lastname" app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintBottom_toTopOf="@+id/editText7"
+            app:layout_constraintTop_toBottomOf="@+id/firstname"/>
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textEmailAddress"
+            android:ems="10"
+            android:id="@+id/editText7" android:layout_marginEnd="85dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="84dp" android:hint="email" app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintBottom_toTopOf="@+id/editText8" android:layout_marginBottom="4dp"
+            android:layout_marginTop="17dp" app:layout_constraintTop_toBottomOf="@+id/lastname"/>
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="phone"
+            android:ems="10"
+            android:id="@+id/editText8" android:layout_marginEnd="85dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="84dp" android:hint="mobile"
+            android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/imageView2"
+            app:layout_constraintVertical_chainStyle="spread_inside"/>
+    <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp" app:srcCompat="@android:drawable/list_selector_background"
+            android:id="@+id/imageView2"
+            android:background="@android:drawable/ic_menu_gallery" android:contentDescription="tap"
+            android:layout_marginBottom="24dp"
+            app:layout_constraintBottom_toTopOf="@+id/button2" android:layout_marginEnd="92dp"
+            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="92dp"/>
+    <Button
+            android:text="Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button2"
+            app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="17dp"
+            android:layout_marginEnd="148dp" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="148dp"/>
+</android.support.constraint.ConstraintLayout>
