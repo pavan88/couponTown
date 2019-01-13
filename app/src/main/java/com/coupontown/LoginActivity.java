@@ -58,15 +58,50 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     TextView resetPassword;
 
+    TextView skipLogin;
+
+    public boolean isLoggedIn() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        return firebaseUser != null;
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         Toolbar toolbar
                 = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
+        if (isLoggedIn()) {
+            Log.i("login", "User Already Logged in");
+            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+            UserInfo userInfo = firebaseUser.getProviderData().get(0);
+
+            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("google.com")) {
+                //Re initiating the gmail login process
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.default_web_client_id))
+                        .requestEmail().requestProfile()
+                        .build();
+
+                mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+                signInUsingGoogle();
+            }
+            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("facebook.com")) {
+
+                callbackManager = CallbackManager.Factory.create();
+                fb_loginButton = findViewById(R.id.fb_loginButton);
+
+                signInUsingFacebook();
+                intent = new Intent(this, HomeActivity.class);
+            }
+
+        }
 
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -102,6 +137,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         resetPassword = findViewById(R.id.resetPassword);
         resetPassword.setOnClickListener(this);
 
+        //SkipLogin
+        skipLogin = findViewById(R.id.skip);
+        skipLogin.setOnClickListener(this);
+
         intent = new Intent(this, HomeActivity.class);
 
     }
@@ -128,6 +167,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (view == resetPassword) {
             Log.d("Reset", "Reset the password");
             resetPassword();
+        }
+
+        if (view == skipLogin) {
+            Log.d("SkipLogin", "SkipLogin");
+            intent = new Intent(this, HomeActivity.class);
+            intent.putExtra("skiplogin", Boolean.TRUE);
+            startActivity(intent);
+            finish();
         }
 
 

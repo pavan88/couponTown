@@ -1,11 +1,14 @@
 package com.coupontown;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,7 +42,7 @@ import java.util.Arrays;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    JSONObject response, profile_pic_data;
+
     TextView user_name, user_email;
     ImageView user_picture;
     NavigationView navigation_view;
@@ -68,11 +72,16 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         firebaseAuth = FirebaseAuth.getInstance();
         Intent intent = getIntent();
 
-        setNavigationHeader();
+
         UserProfile userProfile = intent.getParcelableExtra("profile");
 
         if (userProfile != null) {
+            setNavigationHeader(false);
             setUserProfile(userProfile);
+        }
+
+        if (userProfile == null) {
+            setNavigationHeader(true);
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -88,7 +97,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /*
      Set User Profile Information in Navigation Bar.
    */
-    public void setUserProfile( UserProfile userProfile) {
+    public void setUserProfile(UserProfile userProfile) {
         try {
             user_email.setText(userProfile.getEmail());
             user_name.setText(userProfile.getFull_name());
@@ -126,10 +135,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
     private void initViews() {
-        mRecyclerView = findViewById(R.id.card_recycler_view);
+       /* mRecyclerView = findViewById(R.id.card_recycler_view);
         mRecyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setAdapter(mAdapter);*/
+
+        mRecyclerView = findViewById(R.id.card_recycler_view);
+        LinearLayoutManager manager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(manager);
+        mRecyclerView.setHasFixedSize(true);
+        mAdapter = new DataAdapter();
+        mRecyclerView.setAdapter(mAdapter);
     }
 
 
@@ -204,13 +221,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
             Toast.makeText(this, "Clicked on Feedback", Toast.LENGTH_SHORT).show();
             sendFeedback();
+        } else if (id == R.id.logout) {
 
+            logout();
 
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+        super.onBackPressed();
     }
 
     private void sendFeedback() {
@@ -226,14 +254,59 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     /*
         Set Navigation header by using Layout Inflater.
      */
-    public void setNavigationHeader() {
+    public void setNavigationHeader(boolean skipLogin) {
         navigation_view = (NavigationView) findViewById(R.id.nav_view);
         View header = LayoutInflater.from(this).inflate(R.layout.nav_header, null);
         navigation_view.addHeaderView(header);
         user_name = (TextView) header.findViewById(R.id.username);
         user_picture = (ImageView) header.findViewById(R.id.imageView);
         user_email = (TextView) header.findViewById(R.id.email);
+
+        if (skipLogin) {
+            Button button = header.findViewById(R.id.guestlogin);
+            button.setVisibility(View.VISIBLE);
+            button.setText("LOGIN");
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    Intent guestLogin = new Intent(HomeActivity.this, LoginActivity.class);
+                    startActivity(guestLogin);
+                    finish();
+                }
+            });
+        }
+
+
     }
 
+    private void logout() {
+        AlertDialog.Builder alertbox = new AlertDialog.Builder(this);
+        Log.i("provider", firebaseAuth.getCurrentUser().getProviderData().get(0).toString());
+        //  UserProfile userProfile = intent.getParcelableExtra("profile");
+        alertbox.setIcon(R.drawable.com_facebook_button_icon);
+        alertbox.setTitle("You Want To Logout ?");
+
+        alertbox.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface arg0, int arg1) {
+                // finish used for destroyed activity
+                FirebaseAuth.getInstance().signOut();
+
+                Toast.makeText(HomeActivity.this, "User Session Closed", Toast.LENGTH_LONG).show();
+                Intent loginIntent = new Intent(HomeActivity.this, LoginActivity.class);
+                loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(loginIntent);
+                finish();
+            }
+        });
+
+        alertbox.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface arg0, int arg1) {
+                // Nothing will be happened when clicked on no button
+                // of Dialog
+            }
+        });
+        alertbox.show();
+    }
 
 }

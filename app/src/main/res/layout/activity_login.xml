@@ -16,14 +16,12 @@
                   android:layout_marginTop="64dp" app:layout_constraintHorizontal_bias="0.0"
                   android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/tc">
 
-        <EditText android:layout_margin="16dp"
+        <EditText android:layout_margin="20dp"
                   android:id="@+id/email"
-                  android:inputType="text"
+                  android:inputType="textEmailAddress"
                   android:hint="Email"
                   android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:padding="20px"
-        />
+                  android:layout_height="wrap_content"/>
 
 
         <EditText android:layout_margin="16dp"
@@ -31,9 +29,7 @@
                   android:inputType="textPassword"
                   android:hint="Password"
                   android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:padding="20px"
-        />
+                  android:layout_height="wrap_content"/>
 
         <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content">
 
@@ -42,18 +38,25 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/login_button"
-                    android:layout_margin="16dp"
-                    android:padding="20px"
-            />
+                    android:layout_margin="16dp"/>
 
             <TextView
                     android:id="@+id/resetPassword"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:autoLink="email"
-                    android:padding="20px"
                     android:layout_margin="16dp"
                     android:text="@string/lostpassword"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+            <TextView
+                    android:id="@+id/skip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autoLink="email"
+                    android:layout_margin="16dp"
+
+                    android:text="@string/skiplogin"
                     android:textAppearance="?android:attr/textAppearanceSmall"/>
 
 
@@ -64,9 +67,7 @@
                 android:id="@+id/g_loginButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:padding="20px"
-        />
+                android:layout_margin="16dp"/>
 
         <com.facebook.login.widget.LoginButton android:layout_margin="16dp"
                                                android:id="@+id/fb_loginButton"
@@ -92,7 +93,6 @@
             android:layout_marginEnd="8dp" android:layout_marginRight="8dp"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginLeft="8dp"
             android:layout_marginStart="8dp"/>
-
 
 
 </android.support.constraint.ConstraintLayout>

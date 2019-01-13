@@ -22,6 +22,10 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> im
         mFilteredList = arrayList;
     }
 
+    public DataAdapter() {
+
+    }
+
     @Override
     public DataAdapter.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.card_row, viewGroup, false);
@@ -49,6 +53,9 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> im
 
     @Override
     public int getItemCount() {
+        if (mFilteredList == null) {
+            return 0;
+        }
         return mFilteredList.size();
     }
 
