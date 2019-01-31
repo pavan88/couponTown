@@ -51,7 +51,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     //Facebook
     //Facebook Login
     private LoginButton fb_loginButton;
-    private CallbackManager callbackManager;
 
 
     Intent intent;
@@ -94,11 +93,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
             if (firebaseUser.getProviders().get(0).equalsIgnoreCase("facebook.com")) {
 
-                callbackManager = CallbackManager.Factory.create();
-                fb_loginButton = findViewById(R.id.fb_loginButton);
-
-                signInUsingFacebook();
-                intent = new Intent(this, HomeActivity.class);
+//                callbackManager = CallbackManager.Factory.create();
+//                fb_loginButton = findViewById(R.id.fb_loginButton);
+//
+//                signInUsingFacebook();
+//                intent = new Intent(this, HomeActivity.class);
             }
 
         }
@@ -128,9 +127,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
 
         // Facebook Login Initializations
-        callbackManager = CallbackManager.Factory.create();
-        fb_loginButton = findViewById(R.id.fb_loginButton);
-        fb_loginButton.setOnClickListener(this);
+        // callbackManager = CallbackManager.Factory.create();
+        // fb_loginButton = findViewById(R.id.fb_loginButton);
+        //fb_loginButton.setOnClickListener(this);
 
 
         //Reset Password
@@ -159,10 +158,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             signInUsingGoogle();
         }
 
-        if (view == fb_loginButton) {
-            Log.d(G_TAG, "Sign Method using Facebook Options");
-            signInUsingFacebook();
-        }
+//        if (view == fb_loginButton) {
+//            Log.d(G_TAG, "Sign Method using Facebook Options");
+//            //signInUsingFacebook();
+//        }
 
         if (view == resetPassword) {
             Log.d("Reset", "Reset the password");
@@ -185,19 +184,25 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         if (TextUtils.isEmpty(emailStr)) {
             email.setError("Enter email address to reset password");
-            Toast.makeText(getApplicationContext(), "Enter your registered email id", Toast.LENGTH_SHORT).show();
+            Toast.makeText(LoginActivity.this, "Enter your registered email id", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        if (!isValidEmail(emailStr)) {
+            Toast.makeText(LoginActivity.this, "Invalid Email", Toast.LENGTH_LONG).show();
+            return;
+
+        }
+        
         firebaseAuth.sendPasswordResetEmail(emailStr)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(getApplicationContext(), "We have sent you instructions to reset your password!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(LoginActivity.this, "We have sent you instructions to reset your password!", Toast.LENGTH_LONG).show();
                             startActivity(getIntent());
                         } else {
-                            Toast.makeText(getApplicationContext(), "Failed to send reset email!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(LoginActivity.this, "Failed to send, reset email!", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -225,7 +230,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()) {
-                        Toast.makeText(getApplicationContext(), "Login Success via Gmail", Toast.LENGTH_LONG).show();
+                        Toast.makeText(LoginActivity.this, "Login Success via Gmail", Toast.LENGTH_LONG).show();
                         setuserProfile(guserProfile);
 
                     } else {
@@ -238,7 +243,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             });
         } else {
             // Pass the activity result back to the Facebook SDK
-            callbackManager.onActivityResult(requestCode, resultCode, data);
+            //  callbackManager.onActivityResult(requestCode, resultCode, data);
 
         }
     }
@@ -250,14 +255,20 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         if (TextUtils.isEmpty(emailStr)) {
             email.setError("Enter email address!");
-            Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_LONG).show();
+            Toast.makeText(LoginActivity.this, "Enter email address!", Toast.LENGTH_LONG).show();
             return;
         }
 
         if (TextUtils.isEmpty(passwordStr)) {
             password.setError("Enter password!");
-            Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_LONG).show();
+            Toast.makeText(LoginActivity.this, "Enter password!", Toast.LENGTH_LONG).show();
             return;
+        }
+
+        if (!isValidEmail(emailStr)) {
+            Toast.makeText(LoginActivity.this, "Invalid Email", Toast.LENGTH_LONG).show();
+            return;
+
         }
 
 
@@ -284,10 +295,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (!task.isSuccessful()) {
-                    Toast.makeText(getApplicationContext(), "Please verify the email/password", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "Please verify the email/password", Toast.LENGTH_LONG).show();
                     task.getException();
                 } else {
-                    Toast.makeText(getApplicationContext(), "Login Success via Email & Password", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
                     UserProfile userProfile = new UserProfile();
                     userProfile.setEmail(emailStr);
                     setuserProfile(userProfile);
@@ -326,80 +337,80 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     //***********Facebook LOGIN PROCESS ************//
 
-    private void signInUsingFacebook() {
-        fb_loginButton.setReadPermissions("email", "public_profile");
+//    private void signInUsingFacebook() {
+//        fb_loginButton.setReadPermissions("email", "public_profile");
+//
+//        fb_loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+//            @Override
+//            public void onSuccess(LoginResult loginResult) {
+//
+//                handleFacebookAccessToken(loginResult.getAccessToken());
+//            }
+//
+//            @Override
+//            public void onCancel() {
+//
+//            }
+//
+//            @Override
+//            public void onError(FacebookException error) {
+//                Log.e(FB_TAG, "Error" + error.toString());
+//            }
+//        });
+//    }
 
-        fb_loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
+//    private void handleFacebookAccessToken(AccessToken token) {
+//
+//        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+//        firebaseAuth.signInWithCredential(credential)
+//                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<AuthResult> task) {
+//                        if (task.isSuccessful()) {
+//
+//                            goMainScreenViaFB();
+//
+//                        } else {
+//                            // If sign in fails, display a message to the user.
+//                            Log.w(FB_TAG, "signInWithCredential:failure", task.getException());
+//                            Toast.makeText(LoginActivity.this, "Authentication failed via facebook",
+//                                    Toast.LENGTH_LONG).show();
+//                        }
+//
+//                        // ...
+//                    }
+//                });
+//    }
 
-                handleFacebookAccessToken(loginResult.getAccessToken());
-            }
-
-            @Override
-            public void onCancel() {
-
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-                Log.e(FB_TAG, "Error" + error.toString());
-            }
-        });
-    }
-
-    private void handleFacebookAccessToken(AccessToken token) {
-
-        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-
-                            goMainScreenViaFB();
-
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(FB_TAG, "signInWithCredential:failure", task.getException());
-                            Toast.makeText(getApplicationContext(), "Authentication failed via facebook",
-                                    Toast.LENGTH_LONG).show();
-                        }
-
-                        // ...
-                    }
-                });
-    }
-
-    private void goMainScreenViaFB() {
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        if (accessToken == null) return;
-        GraphRequest data_request = GraphRequest.newMeRequest(
-                accessToken,
-                new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(
-                            JSONObject json_object,
-                            GraphResponse response) {
-                        UserProfile userProfile = new UserProfile();
-                        try {
-                            userProfile.setEmail(json_object.getString("email"));
-                            setuserProfile(userProfile);
-                        } catch (JSONException e) {
-                            Toast.makeText(getApplicationContext(), "Authentication failed via facebook",
-                                    Toast.LENGTH_LONG).show();
-                            signOut();
-                            e.printStackTrace();
-                        }
-
-                    }
-                });
-        Bundle permission_param = new Bundle();
-        // permission_param.putString("fields", "id,name,email,picture.width(500).height(500)");
-        permission_param.putString("fields", "id,name,email,picture.width(200).height(200)");
-        data_request.setParameters(permission_param);
-        data_request.executeAsync();
-    }
+//    private void goMainScreenViaFB() {
+//        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+//        if (accessToken == null) return;
+//        GraphRequest data_request = GraphRequest.newMeRequest(
+//                accessToken,
+//                new GraphRequest.GraphJSONObjectCallback() {
+//                    @Override
+//                    public void onCompleted(
+//                            JSONObject json_object,
+//                            GraphResponse response) {
+//                        UserProfile userProfile = new UserProfile();
+//                        try {
+//                            userProfile.setEmail(json_object.getString("email"));
+//                            setuserProfile(userProfile);
+//                        } catch (JSONException e) {
+//                            Toast.makeText(LoginActivity.this, "Authentication failed via facebook",
+//                                    Toast.LENGTH_LONG).show();
+//                            signOut();
+//                            e.printStackTrace();
+//                        }
+//
+//                    }
+//                });
+//        Bundle permission_param = new Bundle();
+//        // permission_param.putString("fields", "id,name,email,picture.width(500).height(500)");
+//        permission_param.putString("fields", "id,name,email,picture.width(200).height(200)");
+//        data_request.setParameters(permission_param);
+//        data_request.executeAsync();
+//    }
 
     private void setuserProfile(UserProfile userProfile) {
 
@@ -429,5 +440,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void signOut() {
         firebaseAuth.getInstance().signOut();
         firebaseAuth.signOut();
+    }
+
+    public final static boolean isValidEmail(String emailID) {
+
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(emailID).matches();
+
     }
 }

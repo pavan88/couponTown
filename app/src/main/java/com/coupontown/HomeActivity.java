@@ -1,9 +1,11 @@
 package com.coupontown;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -14,11 +16,14 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -40,7 +45,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
 
     TextView user_name, user_email;
@@ -57,6 +62,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     //FireBase
     FirebaseAuth firebaseAuth;
 
+
+    //FAB changes
+    private Boolean isFabOpen = false;
+    private FloatingActionButton fab, fab1, fab2;
+    private Animation fab_open, fab_close, rotate_forward, rotate_backward;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +76,24 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //FAB Button
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        fab_open = AnimationUtils.loadAnimation(this, R.anim.fab_open);
+        fab_close = AnimationUtils.loadAnimation(this, R.anim.fab_close);
+        rotate_forward = AnimationUtils.loadAnimation(this, R.anim.rotate_forward);
+        rotate_backward = AnimationUtils.loadAnimation(this, R.anim.rotate_backward);
+        fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab1 = (FloatingActionButton) findViewById(R.id.fab1);
+        fab2 = (FloatingActionButton) findViewById(R.id.fab2);
+        fab_open = AnimationUtils.loadAnimation(this, R.anim.fab_open);
+        fab_close = AnimationUtils.loadAnimation(this, R.anim.fab_close);
+        rotate_forward = AnimationUtils.loadAnimation(this, R.anim.rotate_forward);
+        rotate_backward = AnimationUtils.loadAnimation(this, R.anim.rotate_backward);
+        fab.setOnClickListener(this);
+        fab1.setOnClickListener(this);
+        fab2.setOnClickListener(this);
 
 
         initViews();
@@ -223,6 +253,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             sendFeedback();
         } else if (id == R.id.logout) {
 
+
             logout();
 
         }
@@ -261,8 +292,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         user_name = (TextView) header.findViewById(R.id.username);
         user_picture = (ImageView) header.findViewById(R.id.imageView);
         user_email = (TextView) header.findViewById(R.id.email);
-
+        Menu menu = navigation_view.getMenu();
+        MenuItem logoutItem = menu.findItem(R.id.logout);
         if (skipLogin) {
+            logoutItem.setVisible(false);
             Button button = header.findViewById(R.id.guestlogin);
             button.setVisibility(View.VISIBLE);
             button.setText("LOGIN");
@@ -308,5 +341,52 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         });
         alertbox.show();
     }
+
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        switch (id){
+            case R.id.fab:
+
+                animateFAB();
+                break;
+            case R.id.fab1:
+
+                Log.d("Raj", "Fab 1");
+                break;
+            case R.id.fab2:
+
+                Log.d("Raj", "Fab 2");
+                break;
+        }
+    }
+
+
+    public void animateFAB(){
+
+        if(isFabOpen){
+
+            fab.startAnimation(rotate_backward);
+            fab1.startAnimation(fab_close);
+            fab2.startAnimation(fab_close);
+            fab1.setClickable(false);
+            fab2.setClickable(false);
+            isFabOpen = false;
+            Log.d("Raj", "close");
+
+        } else {
+
+            fab.startAnimation(rotate_forward);
+            fab1.startAnimation(fab_open);
+            fab2.startAnimation(fab_open);
+            fab1.setClickable(true);
+            fab2.setClickable(true);
+            isFabOpen = true;
+            Log.d("Raj","open");
+
+        }
+    }
+
 
 }
