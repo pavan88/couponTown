@@ -13,7 +13,7 @@ import android.widget.ImageView;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-public class ProfileActivity extends AppCompatActivity implements View.OnClickListener {
+public class ProfileActivity extends AppCompatActivity {
 
     private final static int REQUEST_GET_SINGLE_FILE = 001;
     private int GALLERY = 1, CAMERA = 2;
@@ -28,41 +28,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         setSupportActionBar(toolbar);
 
 
-        imageView = findViewById(R.id.imageView2);
-        imageView.setOnClickListener(this);
-
-
-    }
-
-
-    @Override
-    public void onClick(View v) {
-        if (v == imageView) {
-
-
-            Intent galleryIntent = new Intent(Intent.ACTION_PICK);
-            galleryIntent.setType("image/*");
-            startActivityForResult(galleryIntent, GALLERY);
-
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int reqCode, int resultCode, Intent data) {
-        super.onActivityResult(reqCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-
-            try {
-                final Uri imageUri = data.getData();
-                final InputStream imageStream = getContentResolver().openInputStream(imageUri);
-                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                imageView.setImageBitmap(selectedImage);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-
-        }
     }
 
 
