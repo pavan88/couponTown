@@ -13,8 +13,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.coupontown.model.UserProfile;
-import com.facebook.*;
-import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -24,8 +22,11 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.firebase.database.*;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.util.Iterator;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -41,6 +42,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private static final String FB_TAG = "FacebookLogin";
     private static final String G_TAG = "GoogleLogin";
     private static final String E_TAG = "EmailLogin";
+
+    FirebaseStorage storage;
+    StorageReference storageReference;
+
+
+    private DatabaseReference mFirebaseDatabase;
+    private FirebaseDatabase mFirebaseInstance;
 
 
     //Google
@@ -74,12 +82,16 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         Toolbar toolbar
                 = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        firebaseAuth = FirebaseAuth.getInstance();
 
         if (isLoggedIn()) {
             Log.i("login", "User Already Logged in");
             FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-            UserInfo userInfo = firebaseUser.getProviderData().get(0);
+
+            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("password")) {
+                fetchProfileInfo(firebaseUser.getEmail());
+            }
+
 
             if (firebaseUser.getProviders().get(0).equalsIgnoreCase("google.com")) {
                 //Re initiating the gmail login process
@@ -102,8 +114,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         }
 
-
-        firebaseAuth = FirebaseAuth.getInstance();
 
         //Email Based Login Initializations Button
 
@@ -193,7 +203,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
 
         }
-        
+
         firebaseAuth.sendPasswordResetEmail(emailStr)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
@@ -299,13 +309,60 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     task.getException();
                 } else {
                     Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
-                    UserProfile userProfile = new UserProfile();
-                    userProfile.setEmail(emailStr);
-                    setuserProfile(userProfile);
+
+
+                    //Fetch User Profile based on email as unique and show HomeActivity
+                    fetchProfileInfo(emailStr);
+                    // setuserProfile(userProfile);
                 }
 
             }
         });
+    }
+
+    private void fetchProfileInfo(final String emailStr) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+
+        String provider = user.getProviders().get(0);
+        if (provider.equalsIgnoreCase("password")) {
+            //inside if if not google login
+            mFirebaseDatabase = FirebaseDatabase.getInstance().getReference();
+            //  mFirebaseDatabase = mFirebaseInstance.getReference("profile");
+
+
+            System.out.println(mFirebaseDatabase.toString());
+            System.out.println(mFirebaseDatabase.getPath());
+            mFirebaseDatabase.child("profile").addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    String key = dataSnapshot.getKey();
+                    System.out.println(dataSnapshot.getChildren().iterator().next().getValue().getClass());
+                    Iterator iterator = dataSnapshot.getChildren().iterator();
+                    System.out.println(dataSnapshot.getValue().getClass());
+                    for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                        UserProfile userProfile = postSnapshot.getValue(UserProfile.class);
+                        if (userProfile.getEmail().equalsIgnoreCase(emailStr)) {
+                            intent.putExtra("profile", userProfile);
+                            Log.i(G_TAG, "*************Profile********");
+                            Log.i(G_TAG, userProfile.toString());
+                            Log.i(G_TAG, "**********End***********");
+
+                            startActivity(intent);
+                            finish();
+                        }
+
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+        }
+
     }
 
 
@@ -421,6 +478,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         //Log.i(G_TAG, user.getEmail());
         if (user != null) {
+            //Check the user is normal login , if normal logged in then pull the profile info from the firebasedb and storage
             userProfile.setPhonenumber(user.getPhoneNumber());
             userProfile.setProvider(user.getProviders().get(0));
             userProfile.setFull_name(user.getDisplayName());

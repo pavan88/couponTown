@@ -34,9 +34,10 @@ dependencies {
     implementation('com.facebook.android:facebook-android-sdk:[4,5)') {
         exclude group: 'com.android.support'
     }
-    implementation 'com.google.firebase:firebase-core:16.0.3'
-    implementation 'com.google.firebase:firebase-auth:16.0.3'
-    implementation 'com.google.firebase:firebase-storage:16.0.3'
+    implementation 'com.google.firebase:firebase-core:16.0.5'
+    implementation 'com.google.firebase:firebase-auth:16.0.5'
+    implementation 'com.google.firebase:firebase-storage:16.0.5'
+    implementation 'com.google.firebase:firebase-database:16.0.5'
 
 
     implementation 'com.google.android.gms:play-services-auth:15.0.1'

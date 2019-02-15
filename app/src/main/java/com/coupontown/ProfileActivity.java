@@ -2,6 +2,7 @@ package com.coupontown;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -22,18 +23,46 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+import com.coupontown.model.UserProfile;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.UUID;
 
 public class ProfileActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private final static int REQUEST_GET_SINGLE_FILE = 001;
-    private int GALLERY = 1, CAMERA = 2;
+
+    FirebaseStorage storage;
+    StorageReference storageReference;
+
+
+    private DatabaseReference mFirebaseDatabase;
+    private FirebaseDatabase mFirebaseInstance;
+
+
+    Uri selectedImageUri;
+
+
     ImageView imageView;
+    Button buttonUpload;
+
+    EditText name;
+    EditText email;
+    EditText number;
 
     private static final int SELECT_PICTURE = 100;
 
@@ -45,9 +74,25 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
+
+        mFirebaseInstance = FirebaseDatabase.getInstance();
+        mFirebaseDatabase = mFirebaseInstance.getReference("profile");
+
 
         imageView = findViewById(R.id.imageViewProfile);
         imageView.setOnClickListener(this);
+
+        buttonUpload = findViewById(R.id.uploadProfile);
+        buttonUpload.setOnClickListener(this);
+
+        name = findViewById(R.id.profile_name);
+        name.setOnClickListener(this);
+        email = findViewById(R.id.profile_email);
+        email.setOnClickListener(this);
+        number = findViewById(R.id.profile_phone);
+        number.setOnClickListener(this);
 
 
     }
@@ -92,6 +137,8 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_PICTURE);
+
+
     }
 
 
@@ -100,57 +147,78 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         int id = view.getId();
 
-        switch (id) {
-            case R.id.imageViewProfile:
-               if(handlePermission()){
-                   openImageChooser();
-               }
+        if (id == R.id.imageViewProfile) {
 
-               //Need to ad extra case to update and save in firebase db
+            openImageChooser();
+
+        }
+        if (id == R.id.uploadProfile) {
+            if (selectedImageUri != null) {
+                final ProgressDialog progressDialog = new ProgressDialog(this);
+                progressDialog.setTitle("Uploading...");
+                progressDialog.show();
+
+                StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
+                ref.putFile(selectedImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        progressDialog.dismiss();
+                        Toast.makeText(ProfileActivity.this, "Profile Image uploaded Succussfully", Toast.LENGTH_SHORT).show();
+                        progressDialog.setTitle("Updating the profile");
+                        progressDialog.show();
+                        UserProfile userProfile = new UserProfile();
+                        userProfile.setEmail(email.getText().toString());
+                        userProfile.setPhonenumber(number.getText().toString());
+                        userProfile.setFull_name(name.getText().toString());
+
+
+                        String uploadiD = mFirebaseDatabase.push().getKey();
+                        mFirebaseDatabase.child(uploadiD).setValue(userProfile);
+                        Toast.makeText(ProfileActivity.this, "Profile Saved Successfully", Toast.LENGTH_SHORT).show();
+
+
+                        progressDialog.dismiss();
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        progressDialog.dismiss();
+                        Toast.makeText(ProfileActivity.this, "Failed to upload" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
+                                .getTotalByteCount());
+                        progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                    }
+                });
+
+
+            } else {
+                Toast.makeText(ProfileActivity.this, "Please select the image first", Toast.LENGTH_SHORT).show();
+
+            }
+
         }
     }
 
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (resultCode == RESULT_OK) {
-                    if (requestCode == SELECT_PICTURE) {
-                        // Get the url from data
-                        final Uri selectedImageUri = data.getData();
-                        if (null != selectedImageUri) {
-                            // Get the path from the Uri
-                            String path = getPathFromURI(selectedImageUri);
-                            Log.i("Image", "Image Path : " + path);
-                            // Set the image in ImageView
-                            findViewById(R.id.imageViewProfile).post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    ((ImageView) findViewById(R.id.imageViewProfile)).setImageURI(selectedImageUri);
-                                }
-                            });
+        if (resultCode == RESULT_OK && requestCode == SELECT_PICTURE && data != null && data.getData() != null) {
 
-                        }
-                    }
-                }
+            selectedImageUri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
+                imageView.setImageBitmap(bitmap);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        }).start();
-
-    }
-
-    /* Get the real path from the URI */
-    public String getPathFromURI(Uri contentUri) {
-        String res = null;
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = getContentResolver().query(contentUri, proj, null, null, null);
-        if (cursor.moveToFirst()) {
-            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-            res = cursor.getString(column_index);
         }
-        cursor.close();
-        return res;
+
     }
+
 
     private void showSettingsAlert() {
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();

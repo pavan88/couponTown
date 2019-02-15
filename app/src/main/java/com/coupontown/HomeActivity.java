@@ -1,9 +1,7 @@
 package com.coupontown;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -16,7 +14,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,9 +30,7 @@ import com.coupontown.api.JSONResponse;
 import com.coupontown.api.RequestInterface;
 import com.coupontown.model.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
-import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -294,8 +289,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         user_email = (TextView) header.findViewById(R.id.email);
         Menu menu = navigation_view.getMenu();
         MenuItem logoutItem = menu.findItem(R.id.logout);
+        MenuItem profileItem = menu.findItem(R.id.profile);
         if (skipLogin) {
             logoutItem.setVisible(false);
+            profileItem.setVisible(false);
             Button button = header.findViewById(R.id.guestlogin);
             button.setVisibility(View.VISIBLE);
             button.setText("LOGIN");
@@ -309,6 +306,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
         }
+        //else it will logged in using gmail or normal registrations
+
 
 
     }
@@ -346,7 +345,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        switch (id){
+        switch (id) {
             case R.id.fab:
 
                 animateFAB();
@@ -363,9 +362,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    public void animateFAB(){
+    public void animateFAB() {
 
-        if(isFabOpen){
+        if (isFabOpen) {
 
             fab.startAnimation(rotate_backward);
             fab1.startAnimation(fab_close);
@@ -383,7 +382,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             fab1.setClickable(true);
             fab2.setClickable(true);
             isFabOpen = true;
-            Log.d("Raj","open");
+            Log.d("Raj", "open");
 
         }
     }
