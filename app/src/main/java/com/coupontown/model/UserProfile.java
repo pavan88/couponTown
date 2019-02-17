@@ -4,6 +4,9 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.Date;
+import java.util.List;
+
 public class UserProfile implements Parcelable {
 
     private String full_name;
@@ -26,21 +29,34 @@ public class UserProfile implements Parcelable {
 
     private boolean multipleAccount;
 
+    private String picurlstr;
+
+    private Date createdon;
+
+    private Date modifiedon;
+
+    private List<String> favorites;
+
+
+
+    //TODO need to add created/modified => date/time
     public UserProfile() {
         super();
     }
 
-
-    public UserProfile(Parcel parcel) {
-        full_name = parcel.readString();
-        profile_pic = parcel.readParcelable(Uri.class.getClassLoader());
-        email = parcel.readString();
-        uid = parcel.readString();
-        phonenumber = parcel.readString();
-        provider = parcel.readString();
-        isAuthenticated = parcel.readByte() != 0;
-        isVerified = parcel.readByte() != 0;
-        multipleAccount = parcel.readByte() != 0;
+    protected UserProfile(Parcel in) {
+        full_name = in.readString();
+        email = in.readString();
+        uid = in.readString();
+        profile_pic = in.readParcelable(Uri.class.getClassLoader());
+        phonenumber = in.readString();
+        provider = in.readString();
+        isAuthenticated = in.readByte() != 0;
+        isVerified = in.readByte() != 0;
+        lastloggedin = in.readString();
+        multipleAccount = in.readByte() != 0;
+        picurlstr = in.readString();
+        favorites = in.createStringArrayList();
     }
 
     public static final Creator<UserProfile> CREATOR = new Creator<UserProfile>() {
@@ -55,23 +71,14 @@ public class UserProfile implements Parcelable {
         }
     };
 
-    // @Override
-    public int describeContents() {
-        return 0;
+    public List<String> getFavorites() {
+        return favorites;
     }
 
-    // @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(full_name);
-        parcel.writeParcelable(profile_pic, i);
-        parcel.writeString(email);
-        parcel.writeString(uid);
-        parcel.writeString(phonenumber);
-        parcel.writeString(provider);
-        parcel.writeByte((byte) (isAuthenticated ? 1 : 0));
-        parcel.writeByte((byte) (isVerified ? 1 : 0));
-        parcel.writeByte((byte) (multipleAccount ? 1 : 0));
+    public void setFavorites(List<String> favorites) {
+        this.favorites = favorites;
     }
+
 
     public String getFull_name() {
         return full_name;
@@ -153,20 +160,33 @@ public class UserProfile implements Parcelable {
         this.lastloggedin = lastloggedin;
     }
 
+    public String getPicurlstr() {
+        return picurlstr;
+    }
+
+    public void setPicurlstr(String picurlstr) {
+        this.picurlstr = picurlstr;
+    }
+
 
     @Override
-    public String toString() {
-        return "UserProfile{" +
-                "full_name='" + full_name + '\'' +
-                ", email='" + email + '\'' +
-                ", uid='" + uid + '\'' +
-                ", profile_pic=" + profile_pic +
-                ", phonenumber='" + phonenumber + '\'' +
-                ", provider='" + provider + '\'' +
-                ", isAuthenticated=" + isAuthenticated +
-                ", isVerified=" + isVerified +
-                ", lastloggedin='" + lastloggedin + '\'' +
-                ", multipleAccount=" + multipleAccount +
-                '}';
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(full_name);
+        parcel.writeString(email);
+        parcel.writeString(uid);
+        parcel.writeParcelable(profile_pic, i);
+        parcel.writeString(phonenumber);
+        parcel.writeString(provider);
+        parcel.writeByte((byte) (isAuthenticated ? 1 : 0));
+        parcel.writeByte((byte) (isVerified ? 1 : 0));
+        parcel.writeString(lastloggedin);
+        parcel.writeByte((byte) (multipleAccount ? 1 : 0));
+        parcel.writeString(picurlstr);
+        parcel.writeStringList(favorites);
     }
 }

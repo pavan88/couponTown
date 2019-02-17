@@ -3,6 +3,7 @@ package com.coupontown;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -126,7 +127,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         try {
             user_email.setText(userProfile.getEmail());
             user_name.setText(userProfile.getFull_name());
-            String url = userProfile.getProfile_pic().toString();
+            String url = userProfile.getPicurlstr();
             Picasso.with(this).load(url).resize(150, 150).into(user_picture);
 
         } catch (Exception e) {

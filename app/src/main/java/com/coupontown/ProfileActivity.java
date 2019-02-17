@@ -6,22 +6,17 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -30,17 +25,16 @@ import android.widget.Toast;
 import com.coupontown.model.UserProfile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.UserInfo;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.*;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.UUID;
 
 public class ProfileActivity extends AppCompatActivity implements View.OnClickListener {
@@ -74,11 +68,13 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
-        mFirebaseInstance = FirebaseDatabase.getInstance();
-        mFirebaseDatabase = mFirebaseInstance.getReference("profile");
+
+        mFirebaseDatabase = FirebaseDatabase.getInstance().getReference();
+
 
 
         imageView = findViewById(R.id.imageViewProfile);
@@ -95,7 +91,42 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         number.setOnClickListener(this);
 
 
+        //
+
+
+        mFirebaseDatabase.child("profile").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    UserProfile userProfile = postSnapshot.getValue(UserProfile.class);
+                    FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                    if (userProfile != null && firebaseUser.getUid().equalsIgnoreCase(userProfile.getUid())) {
+                        name.setText(userProfile.getFull_name());
+                        email.setText(userProfile.getEmail());
+                        number.setText(userProfile.getPhonenumber());
+                        user_picture = findViewById(R.id.imageViewProfile);
+                        //Check the pic exists in firebase storage
+                        Picasso.with(ProfileActivity.this).load(firebaseUser.getPhotoUrl()).resize(250, 250).into(user_picture);
+                        break;
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+        //
+
+
     }
+    ImageView user_picture;
 
     private boolean handlePermission() {
 

@@ -5,7 +5,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".ProfileActivity">
-    <include layout="@layout/toolbar" />
+    <include layout="@layout/toolbar"/>
 
     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
                   android:layout_marginTop="32dp"
@@ -45,23 +45,21 @@
                     android:layout_height="wrap_content"
                     android:text="Name"
                     android:textColor="#a2a1b8"
-                    android:maxLength="12"
                     android:background="#0000"
                     android:padding="16dp"
                     android:gravity="left"
             />
             <EditText android:id="@+id/profile_name"
-                    android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Sam Enric"
-                    android:textColorHint="#181737"
-                    android:textColor="#181737"
-                    android:maxLength="12"
-                    android:background="#0000"
-                    android:padding="16dp"
-                    android:gravity="right"
+                      android:layout_weight="1"
+                      android:textSize="16dp"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:hint="Sam Enric"
+                      android:textColorHint="#181737"
+                      android:textColor="#181737"
+                      android:background="#0000"
+                      android:padding="16dp"
+                      android:gravity="right"
             />
         </LinearLayout>
 
@@ -76,24 +74,22 @@
                     android:layout_height="wrap_content"
                     android:text="Email"
                     android:textColor="#a2a1b8"
-                    android:maxLength="12"
                     android:background="#0000"
                     android:padding="16dp"
                     android:gravity="left"
             />
 
-            <EditText  android:id="@+id/profile_email"
-                    android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="info@example.com"
-                    android:textColorHint="#181737"
-                    android:textColor="#181737"
-                    android:maxLength="12"
-                    android:background="#0000"
-                    android:padding="16dp"
-                    android:gravity="right"
+            <EditText android:id="@+id/profile_email"
+                      android:layout_weight="1"
+                      android:textSize="16dp"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:hint="info@example.com"
+                      android:textColorHint="#181737"
+                      android:textColor="#181737"
+                      android:background="#0000"
+                      android:padding="16dp"
+                      android:gravity="right"
             />
         </LinearLayout>
 
@@ -106,28 +102,28 @@
                     android:layout_height="wrap_content"
                     android:text="Phone"
                     android:textColor="#a2a1b8"
-                    android:maxLength="12"
                     android:background="#0000"
                     android:padding="16dp"
                     android:gravity="left"
             />
 
-            <EditText  android:id="@+id/profile_phone"
-                    android:layout_weight="1"
-                    android:textSize="16dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="9999999999"
-                    android:textColorHint="#181737"
-                    android:textColor="#181737"
-                    android:maxLength="12"
-                    android:background="#0000"
-                    android:padding="16dp"
-                    android:gravity="right"
+            <EditText android:id="@+id/profile_phone"
+                      android:layout_weight="1"
+                      android:textSize="16dp"
+                      android:layout_width="match_parent"
+                      android:layout_height="match_parent"
+                      android:hint="9999999999"
+                      android:textColorHint="#181737"
+                      android:textColor="#181737"
+                      android:maxLength="10"
+                      android:background="#0000"
+                      android:padding="16dp"
+                      android:gravity="right"
             />
         </LinearLayout>
 
 
-        <Button android:id="@+id/uploadProfile" android:layout_width="wrap_content" android:layout_height="wrap_content"  android:layout_gravity="center" android:text="Update"/>
+        <Button android:id="@+id/uploadProfile" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_gravity="center" android:text="Update"/>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
