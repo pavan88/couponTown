@@ -35,16 +35,15 @@ public class UserProfile implements Parcelable {
 
     private Date modifiedon;
 
+    private Date lastLogin;
+
     private List<String> favorites;
 
-
-
-    //TODO need to add created/modified => date/time
     public UserProfile() {
-        super();
+
     }
 
-    protected UserProfile(Parcel in) {
+    public UserProfile(Parcel in) {
         full_name = in.readString();
         email = in.readString();
         uid = in.readString();
@@ -59,6 +58,27 @@ public class UserProfile implements Parcelable {
         favorites = in.createStringArrayList();
     }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(full_name);
+        dest.writeString(email);
+        dest.writeString(uid);
+        dest.writeParcelable(profile_pic, flags);
+        dest.writeString(phonenumber);
+        dest.writeString(provider);
+        dest.writeByte((byte) (isAuthenticated ? 1 : 0));
+        dest.writeByte((byte) (isVerified ? 1 : 0));
+        dest.writeString(lastloggedin);
+        dest.writeByte((byte) (multipleAccount ? 1 : 0));
+        dest.writeString(picurlstr);
+        dest.writeStringList(favorites);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
     public static final Creator<UserProfile> CREATOR = new Creator<UserProfile>() {
         @Override
         public UserProfile createFromParcel(Parcel in) {
@@ -71,29 +91,12 @@ public class UserProfile implements Parcelable {
         }
     };
 
-    public List<String> getFavorites() {
-        return favorites;
-    }
-
-    public void setFavorites(List<String> favorites) {
-        this.favorites = favorites;
-    }
-
-
     public String getFull_name() {
         return full_name;
     }
 
     public void setFull_name(String full_name) {
         this.full_name = full_name;
-    }
-
-    public Uri getProfile_pic() {
-        return profile_pic;
-    }
-
-    public void setProfile_pic(Uri profile_pic) {
-        this.profile_pic = profile_pic;
     }
 
     public String getEmail() {
@@ -110,6 +113,14 @@ public class UserProfile implements Parcelable {
 
     public void setUid(String uid) {
         this.uid = uid;
+    }
+
+    public Uri getProfile_pic() {
+        return profile_pic;
+    }
+
+    public void setProfile_pic(Uri profile_pic) {
+        this.profile_pic = profile_pic;
     }
 
     public String getPhonenumber() {
@@ -136,20 +147,12 @@ public class UserProfile implements Parcelable {
         isAuthenticated = authenticated;
     }
 
-    public boolean isVerified(boolean emailVerified) {
+    public boolean isVerified() {
         return isVerified;
     }
 
     public void setVerified(boolean verified) {
         isVerified = verified;
-    }
-
-    public boolean isMultipleAccount() {
-        return multipleAccount;
-    }
-
-    public void setMultipleAccount(boolean multipleAccount) {
-        this.multipleAccount = multipleAccount;
     }
 
     public String getLastloggedin() {
@@ -160,6 +163,14 @@ public class UserProfile implements Parcelable {
         this.lastloggedin = lastloggedin;
     }
 
+    public boolean isMultipleAccount() {
+        return multipleAccount;
+    }
+
+    public void setMultipleAccount(boolean multipleAccount) {
+        this.multipleAccount = multipleAccount;
+    }
+
     public String getPicurlstr() {
         return picurlstr;
     }
@@ -168,25 +179,56 @@ public class UserProfile implements Parcelable {
         this.picurlstr = picurlstr;
     }
 
+    public Date getCreatedon() {
+        return createdon;
+    }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public void setCreatedon(Date createdon) {
+        this.createdon = createdon;
+    }
+
+    public Date getModifiedon() {
+        return modifiedon;
+    }
+
+    public void setModifiedon(Date modifiedon) {
+        this.modifiedon = modifiedon;
+    }
+
+    public Date getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Date lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public List<String> getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(List<String> favorites) {
+        this.favorites = favorites;
     }
 
     @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(full_name);
-        parcel.writeString(email);
-        parcel.writeString(uid);
-        parcel.writeParcelable(profile_pic, i);
-        parcel.writeString(phonenumber);
-        parcel.writeString(provider);
-        parcel.writeByte((byte) (isAuthenticated ? 1 : 0));
-        parcel.writeByte((byte) (isVerified ? 1 : 0));
-        parcel.writeString(lastloggedin);
-        parcel.writeByte((byte) (multipleAccount ? 1 : 0));
-        parcel.writeString(picurlstr);
-        parcel.writeStringList(favorites);
+    public String toString() {
+        return "UserProfile{" +
+                "full_name='" + full_name + '\'' +
+                ", email='" + email + '\'' +
+                ", uid='" + uid + '\'' +
+                ", profile_pic=" + profile_pic +
+                ", phonenumber='" + phonenumber + '\'' +
+                ", provider='" + provider + '\'' +
+                ", isAuthenticated=" + isAuthenticated +
+                ", isVerified=" + isVerified +
+                ", lastloggedin='" + lastloggedin + '\'' +
+                ", multipleAccount=" + multipleAccount +
+                ", picurlstr='" + picurlstr + '\'' +
+                ", createdon=" + createdon +
+                ", modifiedon=" + modifiedon +
+                ", lastLogin=" + lastLogin +
+                ", favorites=" + favorites +
+                '}';
     }
 }

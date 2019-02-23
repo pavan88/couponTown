@@ -128,7 +128,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             user_email.setText(userProfile.getEmail());
             user_name.setText(userProfile.getFull_name());
             String url = userProfile.getPicurlstr();
-            Picasso.with(this).load(url).resize(150, 150).into(user_picture);
+           // Picasso.with(this).load(url).resize(150, 150).into(user_picture);
+            Picasso.with(this).load(url).resize(600, 120).centerInside().into(user_picture);
 
         } catch (Exception e) {
             e.printStackTrace();

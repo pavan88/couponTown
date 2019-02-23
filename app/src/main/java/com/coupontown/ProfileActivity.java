@@ -1,6 +1,5 @@
 package com.coupontown;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
@@ -13,11 +12,13 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -59,6 +60,9 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     EditText number;
 
     private static final int SELECT_PICTURE = 100;
+    Animation myAnim;
+
+    ImageView user_picture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,13 +77,14 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         storageReference = storage.getReference();
 
 
-        mFirebaseDatabase = FirebaseDatabase.getInstance().getReference();
-
+        mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile");
 
 
         imageView = findViewById(R.id.imageViewProfile);
         imageView.setOnClickListener(this);
 
+
+        myAnim = AnimationUtils.loadAnimation(this, R.anim.profile_button);
         buttonUpload = findViewById(R.id.uploadProfile);
         buttonUpload.setOnClickListener(this);
 
@@ -92,13 +97,15 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
 
         //
+        //Need to write the logic for read & update
 
 
-        mFirebaseDatabase.child("profile").addListenerForSingleValueEvent(new ValueEventListener() {
+        mFirebaseDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    String key = postSnapshot.getKey();
+                    Log.i("dbkey", key);
                     UserProfile userProfile = postSnapshot.getValue(UserProfile.class);
                     FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
                     if (userProfile != null && firebaseUser.getUid().equalsIgnoreCase(userProfile.getUid())) {
@@ -107,7 +114,8 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                         number.setText(userProfile.getPhonenumber());
                         user_picture = findViewById(R.id.imageViewProfile);
                         //Check the pic exists in firebase storage
-                        Picasso.with(ProfileActivity.this).load(firebaseUser.getPhotoUrl()).resize(250, 250).into(user_picture);
+                        Picasso.with(ProfileActivity.this).load(firebaseUser.getPhotoUrl()).resize(1200, 450)
+                                .centerInside().into(imageView);
                         break;
                     }
 
@@ -126,22 +134,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
 
     }
-    ImageView user_picture;
 
-    private boolean handlePermission() {
-
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            //ask for permission
-            Toast.makeText(this, "Permission Request", Toast.LENGTH_LONG);
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    SELECT_PICTURE);
-            return true;
-
-        }
-        return false;
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -174,6 +167,11 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
 
     @Override
+    public void recreate() {
+        super.recreate();
+    }
+
+    @Override
     public void onClick(View view) {
 
         int id = view.getId();
@@ -184,6 +182,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         }
         if (id == R.id.uploadProfile) {
+            view.startAnimation(myAnim);
             if (selectedImageUri != null) {
                 final ProgressDialog progressDialog = new ProgressDialog(this);
                 progressDialog.setTitle("Uploading...");
@@ -197,14 +196,16 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                         Toast.makeText(ProfileActivity.this, "Profile Image uploaded Succussfully", Toast.LENGTH_SHORT).show();
                         progressDialog.setTitle("Updating the profile");
                         progressDialog.show();
-                        UserProfile userProfile = new UserProfile();
+                        //Write the logic for read and update
+
+                      /*  UserProfile userProfile = new UserProfile();
                         userProfile.setEmail(email.getText().toString());
                         userProfile.setPhonenumber(number.getText().toString());
                         userProfile.setFull_name(name.getText().toString());
 
 
-                        String uploadiD = mFirebaseDatabase.push().getKey();
-                        mFirebaseDatabase.child(uploadiD).setValue(userProfile);
+                        String uploadiD = mFirebaseDatabase.getKey();
+                        mFirebaseDatabase.child(uploadiD).setValue(userProfile);*/
                         Toast.makeText(ProfileActivity.this, "Profile Saved Successfully", Toast.LENGTH_SHORT).show();
 
 
@@ -228,8 +229,15 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
 
             } else {
-                Toast.makeText(ProfileActivity.this, "Please select the image first", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProfileActivity.this, "Updating the Profile only", Toast.LENGTH_SHORT).show();
+                //Retrieve the Current user profile from DB
+                UserProfile userProfile = new UserProfile();
+                userProfile.setEmail("PAVANCS0451@GMAIL.com");
+                userProfile.setPhonenumber("9986339732");
+                userProfile.setFull_name("PAVAN1");
 
+                //Now update the UserProfile object to the key
+                //Logic todo
             }
 
         }
