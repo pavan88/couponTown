@@ -195,12 +195,19 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         //TODO need to get proper profile details and load the profile data in profile actvity
 
                         FirebaseUser firebaseUser = task.getResult().getUser();
-                        userProfile = mapFirebaseuser(firebaseUser);
-                        userProfile.setEmail(account.getEmail());
+                        if (!firebaseUser.isEmailVerified()) {
+                            Log.i(G_TAG, "Sending Email Verification");
+                            Exception exception = firebaseUser.sendEmailVerification().getException();
+                            exception.printStackTrace();
+                        } else {
+                            userProfile = mapFirebaseuser(firebaseUser);
+                            userProfile.setEmail(account.getEmail());
 
-                        //Set the userprofile to intent and diplay in profile activtity
+                            //Set the userprofile to intent and diplay in profile activtity
 
-                        setuserProfile();
+                            setuserProfile();
+                        }
+
 
                     } else {
                         // If sign in fails, display a message to the user.
@@ -239,7 +246,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     for (DataSnapshot data : dataSnapshot.getChildren()) {
-                       String key =  data.getKey();
+                        String key = data.getKey();
                         Log.i("dbkey", key);
                         String email = (String) data.child("email").getValue();
                         String uid = (String) data.child("uid").getValue();
@@ -341,19 +348,28 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     //User Existing. So login with valid credentails.
     private void signin(final String emailStr, final String passwordStr) {
-        firebaseAuth.signInWithEmailAndPassword(emailStr, passwordStr).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if (!task.isSuccessful()) {
-                    Toast.makeText(LoginActivity.this, "Please verify the email/password", Toast.LENGTH_LONG).show();
-                    task.getException();
-                } else {
-                    Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
+        firebaseAuth.signInWithEmailAndPassword(emailStr, passwordStr)
+                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this, "Please verify the email/password", Toast.LENGTH_LONG).show();
+                            task.getException();
+                        } else {
+                            if (task.getResult().getUser().isEmailVerified()) {
+                                Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
+                                userProfile = mapFirebaseuser(task.getResult().getUser());
+                                userProfile.setEmail(emailStr);
+                                setuserProfile();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Please verify the Email, before login", Toast.LENGTH_LONG).show();
 
-                }
+                            }
 
-            }
-        });
+                        }
+
+                    }
+                });
     }
 
 
@@ -365,14 +381,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
 
-                            Toast.makeText(LoginActivity.this, "User Email Created", Toast.LENGTH_LONG).show();
-                            userProfile = mapFirebaseuser(task.getResult().getUser());
-                            userProfile.setEmail(emailStr);
-                            setuserProfile();
+                            Toast.makeText(LoginActivity.this, "User Email Created, Please check email to verify", Toast.LENGTH_LONG).show();
+                            task.getResult().getUser().sendEmailVerification();
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
-                            task.getException();
+                            Exception exception = task.getException();
+                            exception.printStackTrace();
 
                         }
                     }
