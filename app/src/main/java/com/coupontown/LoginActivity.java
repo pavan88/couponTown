@@ -195,19 +195,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         //TODO need to get proper profile details and load the profile data in profile actvity
 
                         FirebaseUser firebaseUser = task.getResult().getUser();
-                        if (!firebaseUser.isEmailVerified()) {
-                            Log.i(G_TAG, "Sending Email Verification");
-                            Exception exception = firebaseUser.sendEmailVerification().getException();
-                            exception.printStackTrace();
-                        } else {
-                            userProfile = mapFirebaseuser(firebaseUser);
-                            userProfile.setEmail(account.getEmail());
+                        userProfile = mapFirebaseuser(firebaseUser);
+                        userProfile.setEmail(account.getEmail());
 
-                            //Set the userprofile to intent and diplay in profile activtity
+                        //Set the userprofile to intent and diplay in profile activtity
 
-                            setuserProfile();
-                        }
-
+                        setuserProfile();
 
                     } else {
                         // If sign in fails, display a message to the user.
@@ -219,6 +212,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             });
 
         }
+
     }
 
     private boolean isLoggedIn() {

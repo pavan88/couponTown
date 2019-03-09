@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -55,9 +56,9 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     ImageView imageView;
     Button buttonUpload;
 
-    EditText name;
-    EditText email;
-    EditText number;
+    TextInputEditText name;
+    TextInputEditText email;
+    TextInputEditText number;
 
     private static final int SELECT_PICTURE = 100;
     Animation myAnim;
