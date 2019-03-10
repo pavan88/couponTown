@@ -72,6 +72,10 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Intent intent = getIntent();
+
+
+        UserProfile userProfileObject = intent.getParcelableExtra("profile");
 
 
         storage = FirebaseStorage.getInstance();
@@ -100,35 +104,13 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         //
         //Need to write the logic for read & update
 
-
-        mFirebaseDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    String key = postSnapshot.getKey();
-                    Log.i("dbkey", key);
-                    UserProfile userProfile = postSnapshot.getValue(UserProfile.class);
-                    FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-                    if (userProfile != null && firebaseUser.getUid().equalsIgnoreCase(userProfile.getUid())) {
-                        name.setText(userProfile.getFull_name());
-                        email.setText(userProfile.getEmail());
-                        number.setText(userProfile.getPhonenumber());
-                        user_picture = findViewById(R.id.imageViewProfile);
-                        //Check the pic exists in firebase storage
-                        Picasso.with(ProfileActivity.this).load(firebaseUser.getPhotoUrl()).resize(1200, 450)
-                                .centerInside().into(imageView);
-                        break;
-                    }
-
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+        name.setText(userProfileObject.getFull_name());
+        email.setText(userProfileObject.getEmail());
+        number.setText(userProfileObject.getPhonenumber());
+        user_picture = findViewById(R.id.imageViewProfile);
+        //Check the pic exists in firebase storage
+        Picasso.with(ProfileActivity.this).load(userProfileObject.getProfile_pic()).resize(1200, 450)
+                .centerInside().into(imageView);
 
 
         //

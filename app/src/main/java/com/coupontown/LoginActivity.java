@@ -55,10 +55,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     FirebaseAuth.AuthStateListener authStateListener;
 
 
-    //Firebase DB
-    private DatabaseReference mFirebaseDatabase;
-
-
     private static final String SKIPLOGIN_TAG = "SKIP";
     private static final String G_TAG = "GoogleLogin";
     private static final String E_TAG = "EmailLogin";
@@ -128,16 +124,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     public void onClick(View view) {
 
         if (view == skipLogin) {
-
-
-            ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setMessage("SkipLogin");
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressDialog.show();//displays the progress bar
-
-            Log.d(SKIPLOGIN_TAG, "Skip Login");
             Intent intent = new Intent(this, HomeActivity.class);
-            intent.putExtra("skiplogin", Boolean.TRUE);
+            intent.putExtra("skipLogin", true);
             startActivity(intent);
             finish();
         }
@@ -151,8 +139,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         if (view == loginbutton) {
             Log.d(E_TAG, "Sign Method using Normal Options");
             loginExistingUser();
-
-            hidekeypad();
         }
 
         if (view == resetPassword) {
@@ -162,77 +148,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private void setuserProfile() {
-
-        //Logic to save in save in database if emailid isnull
-
-        //save data in firebase for the first time
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setTitle("Sign In...");
-        progressDialog.setMessage("Please wait");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.show();
-        Toast.makeText(LoginActivity.this, "Login Success", Toast.LENGTH_LONG).show();
-
-        try {
-            mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile");
-
-            mFirebaseDatabase.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        String key = data.getKey();
-                        Log.i("dbkey", key);
-                        String email = (String) data.child("email").getValue();
-                        String uid = (String) data.child("uid").getValue();
-
-                        if (email.equalsIgnoreCase(userProfile.getEmail()) && uid.equalsIgnoreCase(userProfile.getUid())) {
-                            emailExists = Boolean.TRUE;
-                            break;
-                        }
-
-                    }
-
-                    if (!emailExists) {
-                        mFirebaseDatabase.push().setValue(userProfile);
-                        Log.i(G_TAG, "******DONE*********");
-                    }
-
-                    intentHome.putExtra("profile", userProfile);
-
-                    Log.i(G_TAG, userProfile.toString());
-                    progressDialog.dismiss();
-                    startActivity(intentHome);
-                    finish();
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private UserProfile mapFirebaseuser(FirebaseUser firebaseUser) {
-
-        UserProfile userProfile = new UserProfile();
-        userProfile.setFull_name(firebaseUser.getDisplayName());
-        userProfile.setPhonenumber(firebaseUser.getPhoneNumber());
-        userProfile.setEmail(firebaseUser.getEmail());
-        if (firebaseUser.getPhotoUrl() != null) {
-            userProfile.setPicurlstr(firebaseUser.getPhotoUrl().toString());
-        }
-        userProfile.setProvider(firebaseUser.getProviders().get(0));
-        userProfile.setLastLogin(new Date());
-        userProfile.setUid(firebaseUser.getUid());
-
-        return userProfile;
-    }
 
     private void loginExistingUser() {
         final String emailStr = email.getText().toString().trim();
@@ -386,9 +301,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     if (firebaseUser.isEmailVerified()) {
                         Log.i("1.Firebase", "onAuthStateChanged: User Signed in =>" + firebaseUser.getUid());
                         Log.i("1.Firebase", "onAuthStateChanged: User Signed in Email =>" + firebaseUser.getEmail());
-
-                        userProfile = mapFirebaseuser(firebaseUser);
-                        setuserProfile();
+                        redirecttoHome();
                     }
 
                 } else {
@@ -450,6 +363,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
 
         return firebaseUser;
+    }
+
+    private void redirecttoHome() {
+        Intent loginIntent = new Intent(this, HomeActivity.class);
+        loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(loginIntent);
+        finish();
     }
 }
 
