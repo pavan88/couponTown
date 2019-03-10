@@ -31,6 +31,7 @@ import com.coupontown.api.JSONResponse;
 import com.coupontown.api.RequestInterface;
 import com.coupontown.model.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.squareup.picasso.Picasso;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -63,6 +64,30 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     private Boolean isFabOpen = false;
     private FloatingActionButton fab, fab1, fab2;
     private Animation fab_open, fab_close, rotate_forward, rotate_backward;
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkAuthState();
+    }
+
+    private void checkAuthState() {
+
+        Log.i("firebase", "Checking Authentication State");
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if(firebaseUser ==null){
+            Log.i("firebase" , "Not an auth user, Navigating to Login Screen ");
+
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }else{
+            Log.i("firebase" , "Valid User");
+        }
+    }
 
 
     @Override
@@ -128,7 +153,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             user_email.setText(userProfile.getEmail());
             user_name.setText(userProfile.getFull_name());
             String url = userProfile.getPicurlstr();
-           // Picasso.with(this).load(url).resize(150, 150).into(user_picture);
+            // Picasso.with(this).load(url).resize(150, 150).into(user_picture);
             Picasso.with(this).load(url).resize(600, 120).centerInside().into(user_picture);
 
         } catch (Exception e) {
@@ -309,7 +334,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             });
         }
         //else it will logged in using gmail or normal registrations
-
 
 
     }

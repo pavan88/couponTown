@@ -1,6 +1,7 @@
 package com.coupontown;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -9,6 +10,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -20,6 +23,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
 import com.google.firebase.database.*;
@@ -48,11 +52,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     //Firebase Auth
     FirebaseAuth firebaseAuth;
+    FirebaseAuth.AuthStateListener authStateListener;
 
 
     //Firebase DB
     private DatabaseReference mFirebaseDatabase;
-    private FirebaseDatabase mFirebaseInstance;
 
 
     private static final String SKIPLOGIN_TAG = "SKIP";
@@ -82,6 +86,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        setupFirebaseAuth();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -116,18 +122,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         intentHome = new Intent(this, HomeActivity.class);
 
-        if (isLoggedIn()) {
-            FirebaseUser firebaseUser = firebaseAuth.getInstance().getCurrentUser();
-
-            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("google.com")) {
-                signInUsingGoogle();
-            }
-            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("password")) {
-                //Autologin Logic
-            }
-        }
-
-
     }
 
     @Override
@@ -150,76 +144,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         if (view == googleLogin) {
             Log.d(G_TAG, "Sign Method using Gmail Options");
-            signInUsingGoogle();
+            // signInUsingGoogle();
+            hidekeypad();
         }
 
         if (view == loginbutton) {
             Log.d(E_TAG, "Sign Method using Normal Options");
             loginExistingUser();
+
+            hidekeypad();
         }
 
         if (view == resetPassword) {
             Log.d("Reset", "Reset the password");
             resetPassword();
+            hidekeypad();
         }
-
-
     }
-
-    //Google login flow
-    //***********GMAIL LOGIN PROCESS ************//
-    private void signInUsingGoogle() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-    /// Activity validation for Facebook and Gmail
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-
-        if (requestCode == RC_SIGN_IN) {
-
-
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            final GoogleSignInAccount account = task.getResult();
-
-            AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
-
-            firebaseAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()) {
-                        //setuserProfile(guserProfile);
-                        //TODO need to get proper profile details and load the profile data in profile actvity
-
-                        FirebaseUser firebaseUser = task.getResult().getUser();
-                        userProfile = mapFirebaseuser(firebaseUser);
-                        userProfile.setEmail(account.getEmail());
-
-                        //Set the userprofile to intent and diplay in profile activtity
-
-                        setuserProfile();
-
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        Log.i(G_TAG, "Sign in using gmail failed", task.getException());
-                        signOut();
-                    }
-
-                }
-            });
-
-        }
-
-    }
-
-    private boolean isLoggedIn() {
-        FirebaseUser firebaseUser = firebaseAuth.getInstance().getCurrentUser();
-        return firebaseUser != null;
-    }
-
 
     private void setuserProfile() {
 
@@ -227,11 +168,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         //save data in firebase for the first time
         final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setTitle("Google sign...");
+        progressDialog.setTitle("Sign In...");
         progressDialog.setMessage("Please wait");
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
-        Toast.makeText(LoginActivity.this, "Login Success via Gmail", Toast.LENGTH_LONG).show();
+        Toast.makeText(LoginActivity.this, "Login Success", Toast.LENGTH_LONG).show();
 
         try {
             mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile");
@@ -293,12 +234,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         return userProfile;
     }
 
-
-    private void signOut() {
-        firebaseAuth.getInstance().signOut();
-        firebaseAuth.signOut();
-    }
-
     private void loginExistingUser() {
         final String emailStr = email.getText().toString().trim();
         final String passwordStr = password.getText().toString().trim();
@@ -321,6 +256,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             return;
 
         }
+
+        email.setText("");
+        password.setText("");
 
         //1. Check email exists
         firebaseAuth.fetchSignInMethodsForEmail(emailStr).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<SignInMethodQueryResult>() {
@@ -352,40 +290,44 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         } else {
                             if (task.getResult().getUser().isEmailVerified()) {
                                 Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
-                                userProfile = mapFirebaseuser(task.getResult().getUser());
-                                userProfile.setEmail(emailStr);
-                                setuserProfile();
                             } else {
                                 Toast.makeText(LoginActivity.this, "Please verify the Email, before login", Toast.LENGTH_LONG).show();
-
                             }
 
                         }
 
                     }
-                });
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(LoginActivity.this, "Authentication Failed", Toast.LENGTH_LONG).show();
+                Log.getStackTraceString(e);
+
+            }
+        });
     }
 
 
     //Check User exists, if not register
     private void registeruser(final String emailStr, final String passwordStr) {
-        firebaseAuth.createUserWithEmailAndPassword(emailStr, passwordStr)
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(emailStr, passwordStr)
                 .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-
+                            Log.i("register", "onComplete: Successful registration via email and password =>" + task.isSuccessful());
                             Toast.makeText(LoginActivity.this, "User Email Created, Please check email to verify", Toast.LENGTH_LONG).show();
-                            task.getResult().getUser().sendEmailVerification();
+                            sendVerificationEmail();
+
+                            FirebaseAuth.getInstance().signOut();
 
                         } else {
                             Toast.makeText(LoginActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
-                            Exception exception = task.getException();
-                            exception.printStackTrace();
 
                         }
                     }
                 });
+
     }
 
 
@@ -425,4 +367,92 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 });
     }
 
+    private void hidekeypad() {
+        InputMethodManager inputManager = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                InputMethodManager.HIDE_NOT_ALWAYS);
+        //  this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+    }
+
+    private void setupFirebaseAuth() {
+
+        authStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                if (firebaseUser != null) {
+                    if (firebaseUser.isEmailVerified()) {
+                        Log.i("1.Firebase", "onAuthStateChanged: User Signed in =>" + firebaseUser.getUid());
+                        Log.i("1.Firebase", "onAuthStateChanged: User Signed in Email =>" + firebaseUser.getEmail());
+
+                        userProfile = mapFirebaseuser(firebaseUser);
+                        setuserProfile();
+                    }
+
+                } else {
+                    Log.i("1.Firebase", "onAuthStateChanged: User Signed out or Not Authenticated");
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (authStateListener != null) {
+            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
+    }
+
+    private void sendVerificationEmail() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (firebaseUser != null) {
+            firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(LoginActivity.this, "Sent Email Verification Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Failed::Sent Email Verification Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "failed sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                    }
+                }
+            });
+        }
+    }
+
+    private FirebaseUser updateEmail(@NonNull String email) {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        Log.i("2.firebase", email);
+        if (firebaseUser != null) {
+            firebaseUser.updateEmail(email).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(LoginActivity.this, "Email updated Succussfully", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "3.sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Failed::To update Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "3. failed to update email: onComplete =>" + task.isSuccessful());
+                    }
+                }
+            });
+        }
+
+        return firebaseUser;
+    }
 }
+
+
+
+
