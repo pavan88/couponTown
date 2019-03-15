@@ -70,6 +70,8 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     //Firebase DB
     private DatabaseReference mFirebaseDatabase;
 
+    boolean emailExists;
+
 
     //FAB changes
     private Boolean isFabOpen = false;
@@ -91,6 +93,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         setSupportActionBar(toolbar);
 
         setupFirebaseAuth();
+
 
         //FAB Button
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -115,11 +118,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         loadJSON();
 
         firebaseAuth = FirebaseAuth.getInstance();
-        Intent intent = getIntent();
-
-
-        //  UserProfile userProfile = intent.getParcelableExtra("profile");
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -393,7 +391,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void setupFirebaseAuth() {
-        Log.i("firebase", "setupFirebaseAuth in HomeActivity");
+        Log.i("1.firebase", "setupFirebaseAuth in HomeActivity");
 
         authStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -419,6 +417,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onStop() {
         super.onStop();
+        Log.i("onStop", "Calling onStop Method");
         if (authStateListener != null) {
             FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
         }
@@ -426,6 +425,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onStart() {
+        Log.i("onStart", "Calling onStart Method");
         super.onStart();
         FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
     }
@@ -434,6 +434,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         checkAuthState();
+
     }
 
     private void checkAuthState() {
@@ -465,16 +466,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         } else {
-            Log.i("HomeActivityFirebase", " User Information is saving in database for the first time " + firebaseUser.getEmail());
-            userProfile = mapFirebaseuser(firebaseUser);
-            if (userProfile != null) {
-                Log.i("userprofile", userProfile.toString());
-                //This will be invoked to update DB
-                setuserProfile();
-                //Set Activty Navigation Header
-                setNavigationHeader(false);
-                setUserProfile(userProfile);
-            }
+            checkuserexists();
+            setNavigationHeader(false);
+
         }
     }
 
@@ -484,51 +478,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(loginIntent);
         finish();
-    }
-
-    boolean emailExists;
-
-    private void setuserProfile() {
-
-
-        Toast.makeText(HomeActivity.this, "Setting user", Toast.LENGTH_LONG).show();
-
-        try {
-            mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile");
-
-            mFirebaseDatabase.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        String key = data.getKey();
-                        Log.i("dbkey", key);
-                        String email = (String) data.child("email").getValue();
-                        String uid = (String) data.child("uid").getValue();
-
-                        if (email.equalsIgnoreCase(userProfile.getEmail()) && uid.equalsIgnoreCase(userProfile.getUid())) {
-                            emailExists = Boolean.TRUE;
-                            break;
-                        }
-                    }
-
-                    if (!emailExists) {
-                        mFirebaseDatabase.push().setValue(userProfile);
-                        Log.i("FirebaseDatabase", "****** Profile Information saved Successfully ******");
-                        Log.i("FirebaseDatabase", "************** D O N E **************");
-                    }
-
-                    Log.i("FirebaseDatabase", userProfile.toString());
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -554,5 +503,66 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         return userProfile;
     }
 
-}
 
+    private void checkuserexists() {
+        Log.i("dbref", "Reading the data from Database");
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+
+        Query query = databaseReference.child("profile")
+                .orderByKey()
+                .equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChildren()) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        Log.i("dbkey", snapshot.getKey());
+                        String email = (String) snapshot.child("email").getValue();
+                        String uid = (String) snapshot.child("uid").getValue();
+
+                        if (email.equalsIgnoreCase(FirebaseAuth.getInstance().getCurrentUser().getEmail())
+                                && uid.equalsIgnoreCase(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                            //User existing in DB. So just login
+                            //Construct the userprofile from DB.
+                            userProfile = snapshot.getValue(UserProfile.class);
+                            Log.i("existinguser", userProfile.toString());
+                            setUserProfile(userProfile);
+
+                        } else {
+
+                            createnewuserinfoindb();
+
+                        }
+                    }
+                } else {
+                    createnewuserinfoindb();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }
+
+
+    private void createnewuserinfoindb() {
+        Log.i("dbregister", "Registering the user for the firsttime");
+        //create an entry in db for the first time
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                .child("profile")
+                .child(FirebaseAuth.getInstance()
+                        .getCurrentUser().getUid());
+        userProfile = mapFirebaseuser(FirebaseAuth.getInstance().getCurrentUser());
+        databaseReference.setValue(userProfile);
+        Log.i("FirebaseDatabase", "****** Profile Information saved Successfully ******");
+        Log.i("FirebaseDatabase", "************** D O N E **************");
+        setUserProfile(userProfile);
+    }
+
+}

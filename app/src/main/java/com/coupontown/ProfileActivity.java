@@ -25,15 +25,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.coupontown.model.UserProfile;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.*;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
+import com.google.firebase.storage.*;
 import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
@@ -56,14 +52,16 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     ImageView imageView;
     Button buttonUpload;
 
-    TextInputEditText name;
-    TextInputEditText email;
-    TextInputEditText number;
+    EditText name;
+    EditText email;
+    EditText number;
 
     private static final int SELECT_PICTURE = 100;
     Animation myAnim;
 
     ImageView user_picture;
+
+    UserProfile userProfileObject;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,14 +73,11 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         Intent intent = getIntent();
 
 
-        UserProfile userProfileObject = intent.getParcelableExtra("profile");
+        userProfileObject = intent.getParcelableExtra("profile");
 
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
-
-
-        mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile");
 
 
         imageView = findViewById(R.id.imageViewProfile);
@@ -104,9 +99,18 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         //
         //Need to write the logic for read & update
 
-        name.setText(userProfileObject.getFull_name());
+        if (userProfileObject.getFull_name() != null) {
+            name.setText(userProfileObject.getFull_name());
+        }
+
+
+        if (userProfileObject.getPhonenumber() != null) {
+            number.setText(userProfileObject.getPhonenumber());
+        }
+
         email.setText(userProfileObject.getEmail());
-        number.setText(userProfileObject.getPhonenumber());
+
+
         user_picture = findViewById(R.id.imageViewProfile);
         //Check the pic exists in firebase storage
         Picasso.with(ProfileActivity.this).load(userProfileObject.getProfile_pic()).resize(1200, 450)
@@ -116,26 +120,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         //
 
 
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case SELECT_PICTURE:
-                for (int i = 0; i < permissions.length; i++) {
-                    String permission = permissions[i];
-                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        boolean showRationale = ActivityCompat.shouldShowRequestPermissionRationale(this, permission);
-                        if (showRationale) {
-                            //  Show your own message here
-                        } else {
-                            showSettingsAlert();
-                        }
-                    }
-                }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     /* Choose an image from Gallery */
@@ -171,59 +155,74 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                 progressDialog.setTitle("Uploading...");
                 progressDialog.show();
 
-                StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
-                ref.putFile(selectedImageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                final StorageReference ref = storageReference.child("images/" + FirebaseAuth.getInstance().getCurrentUser().getUid());
+                StorageMetadata storageMetadata = new StorageMetadata.Builder()
+                        .setContentType("image/jpeg")
+                        .setContentLanguage("en").build();
+
+                UploadTask uploadTask = ref.putFile(selectedImageUri, storageMetadata);
+
+                // Listen for state changes, errors, and completion of the upload.
+                uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                     @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        progressDialog.dismiss();
-                        Toast.makeText(ProfileActivity.this, "Profile Image uploaded Succussfully", Toast.LENGTH_SHORT).show();
-                        progressDialog.setTitle("Updating the profile");
-                        progressDialog.show();
-                        //Write the logic for read and update
-
-                      /*  UserProfile userProfile = new UserProfile();
-                        userProfile.setEmail(email.getText().toString());
-                        userProfile.setPhonenumber(number.getText().toString());
-                        userProfile.setFull_name(name.getText().toString());
-
-
-                        String uploadiD = mFirebaseDatabase.getKey();
-                        mFirebaseDatabase.child(uploadiD).setValue(userProfile);*/
-                        Toast.makeText(ProfileActivity.this, "Profile Saved Successfully", Toast.LENGTH_SHORT).show();
-
-
-                        progressDialog.dismiss();
-
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                        double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                        progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                    }
+                }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
+                        System.out.println("Upload is paused");
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
-                    public void onFailure(@NonNull Exception e) {
-                        progressDialog.dismiss();
-                        Toast.makeText(ProfileActivity.this, "Failed to upload" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
                     }
-                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
-                                .getTotalByteCount());
-                        progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // Handle successful uploads on complete
+                        // ...
+
+                        updateDBprofile(taskSnapshot.getUploadSessionUri());
                     }
                 });
 
 
             } else {
-                Toast.makeText(ProfileActivity.this, "Updating the Profile only", Toast.LENGTH_SHORT).show();
-                //Retrieve the Current user profile from DB
-                UserProfile userProfile = new UserProfile();
-                userProfile.setEmail("PAVANCS0451@GMAIL.com");
-                userProfile.setPhonenumber("9986339732");
-                userProfile.setFull_name("PAVAN1");
+                mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile").
+                        child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+                if (!name.getText().toString().equalsIgnoreCase("")) {
+                    mFirebaseDatabase.child("full_name").setValue(name.getText().toString());
+                }
+
+                if (!number.getText().toString().equalsIgnoreCase("")) {
+                    mFirebaseDatabase.child("phonenumber").setValue(number.getText().toString());
+                }
+
+                if (!email.getText().toString().equalsIgnoreCase("")) {
+                    mFirebaseDatabase.child("email").setValue(email.getText().toString());
+                    FirebaseAuth.getInstance().getCurrentUser().updateEmail(email.getText().toString());
+                   // sendVerificationEmail();
+
+                }
+                Toast.makeText(ProfileActivity.this, "Profile Saved Successfully", Toast.LENGTH_SHORT).show();
+
 
                 //Now update the UserProfile object to the key
-                //Logic todo
+                redirecttoHome();
             }
 
         }
+    }
+
+    private void redirecttoHome() {
+        Intent loginIntent = new Intent(this, HomeActivity.class);
+        loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(loginIntent);
+        finish();
     }
 
     public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
@@ -241,40 +240,40 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
     }
 
+    private void updateDBprofile(Uri uri) {
 
-    private void showSettingsAlert() {
-        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle("Alert");
-        alertDialog.setMessage("App needs to access the Camera.");
-        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "DONT ALLOW",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        //finish();
-                    }
-                });
-        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "SETTINGS",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                        openAppSettings(ProfileActivity.this);
-                    }
-                });
-        alertDialog.show();
-    }
+        mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile").
+                child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
-    public static void openAppSettings(final Activity context) {
-        if (context == null) {
-            return;
+
+        if (uri != null) {
+            mFirebaseDatabase.child("picurlstr").setValue(uri.toString());
+            Toast.makeText(ProfileActivity.this, "Image Saved Succussfully in Firebase DB", Toast.LENGTH_SHORT).show();
         }
-        final Intent i = new Intent();
-        i.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        i.addCategory(Intent.CATEGORY_DEFAULT);
-        i.setData(Uri.parse("package:" + context.getPackageName()));
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        context.startActivity(i);
+        //Now update the UserProfile object to the key
+        redirecttoHome();
+
     }
+
+    private void sendVerificationEmail() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (firebaseUser != null) {
+            firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(ProfileActivity.this, "Sent Email Verification Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                        FirebaseAuth.getInstance().signOut();
+                    } else {
+                        Toast.makeText(ProfileActivity.this, "Failed::Sent Email Verification Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "failed sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                    }
+                }
+            });
+        }
+    }
+
 
 }

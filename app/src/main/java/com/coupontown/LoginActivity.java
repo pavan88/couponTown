@@ -205,8 +205,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         } else {
                             if (task.getResult().getUser().isEmailVerified()) {
                                 Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
+                                redirecttoHome();
                             } else {
                                 Toast.makeText(LoginActivity.this, "Please verify the Email, before login", Toast.LENGTH_LONG).show();
+                                sendVerificationEmail();
                             }
 
                         }
@@ -344,26 +346,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
     }
 
-    private FirebaseUser updateEmail(@NonNull String email) {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        Log.i("2.firebase", email);
-        if (firebaseUser != null) {
-            firebaseUser.updateEmail(email).addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(LoginActivity.this, "Email updated Succussfully", Toast.LENGTH_LONG).show();
-                        Log.i("2.Firebase", "3.sendVerificationEmail: onComplete =>" + task.isSuccessful());
-                    } else {
-                        Toast.makeText(LoginActivity.this, "Failed::To update Email!", Toast.LENGTH_LONG).show();
-                        Log.i("2.Firebase", "3. failed to update email: onComplete =>" + task.isSuccessful());
-                    }
-                }
-            });
-        }
-
-        return firebaseUser;
-    }
 
     private void redirecttoHome() {
         Intent loginIntent = new Intent(this, HomeActivity.class);
