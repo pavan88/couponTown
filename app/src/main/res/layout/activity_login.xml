@@ -14,7 +14,8 @@
                   app:layout_constraintStart_toStartOf="parent"
                   android:orientation="vertical"
                   android:layout_marginTop="64dp" app:layout_constraintHorizontal_bias="0.0"
-                  android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/tc">
+                  android:layout_marginBottom="8dp" app:layout_constraintBottom_toTopOf="@+id/tc"
+                  app:layout_constraintVertical_bias="0.483">
 
         <EditText android:layout_margin="20dp"
                   android:id="@+id/email"
@@ -42,7 +43,7 @@
 
             <TextView
                     android:id="@+id/resetPassword"
-                    android:layout_width="wrap_content"
+                    android:layout_width="79dp"
                     android:layout_height="wrap_content"
                     android:autoLink="email"
                     android:layout_margin="16dp"
@@ -51,11 +52,10 @@
 
             <TextView
                     android:id="@+id/skipLoginTv"
-                    android:layout_width="wrap_content"
+                    android:layout_width="70dp"
                     android:layout_height="wrap_content"
                     android:autoLink="email"
                     android:layout_margin="16dp"
-
                     android:text="@string/skiplogin"
                     android:textAppearance="?android:attr/textAppearanceSmall"/>
 

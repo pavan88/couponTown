@@ -152,6 +152,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
             view.startAnimation(myAnim);
             if (selectedImageUri != null) {
                 final ProgressDialog progressDialog = new ProgressDialog(this);
+
                 progressDialog.setTitle("Uploading...");
                 progressDialog.show();
 
@@ -160,54 +161,30 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
                         .setContentType("image/jpeg")
                         .setContentLanguage("en").build();
 
-                UploadTask uploadTask = ref.putFile(selectedImageUri, storageMetadata);
-
-                // Listen for state changes, errors, and completion of the upload.
-                uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                        double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                        progressDialog.setMessage("Uploaded " + (int) progress + "%");
-                    }
-                }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onPaused(UploadTask.TaskSnapshot taskSnapshot) {
-                        System.out.println("Upload is paused");
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle unsuccessful uploads
-                    }
-                }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                ref.putFile(selectedImageUri, storageMetadata).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        // Handle successful uploads on complete
-                        // ...
-
-                        updateDBprofile(taskSnapshot.getUploadSessionUri());
+                        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Log.i("URL", "onSuccess: uri= " + uri.toString());
+                                progressDialog.dismiss();
+                                updateDBprofile(uri);
+                            }
+                        });
+                    }
+                }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                        double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
+                                .getTotalByteCount());
+                        progressDialog.setMessage("Uploaded " + (int) progress + "%");
                     }
                 });
 
 
             } else {
-                mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("profile").
-                        child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-
-                if (!name.getText().toString().equalsIgnoreCase("")) {
-                    mFirebaseDatabase.child("full_name").setValue(name.getText().toString());
-                }
-
-                if (!number.getText().toString().equalsIgnoreCase("")) {
-                    mFirebaseDatabase.child("phonenumber").setValue(number.getText().toString());
-                }
-
-                if (!email.getText().toString().equalsIgnoreCase("")) {
-                    mFirebaseDatabase.child("email").setValue(email.getText().toString());
-                    FirebaseAuth.getInstance().getCurrentUser().updateEmail(email.getText().toString());
-                   // sendVerificationEmail();
-
-                }
+                updateDBprofile(null);
                 Toast.makeText(ProfileActivity.this, "Profile Saved Successfully", Toast.LENGTH_SHORT).show();
 
 
@@ -249,6 +226,14 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         if (uri != null) {
             mFirebaseDatabase.child("picurlstr").setValue(uri.toString());
             Toast.makeText(ProfileActivity.this, "Image Saved Succussfully in Firebase DB", Toast.LENGTH_SHORT).show();
+        }
+
+        if (!name.getText().toString().equalsIgnoreCase("")) {
+            mFirebaseDatabase.child("full_name").setValue(name.getText().toString());
+        }
+
+        if (!number.getText().toString().equalsIgnoreCase("")) {
+            mFirebaseDatabase.child("phonenumber").setValue(number.getText().toString());
         }
         //Now update the UserProfile object to the key
         redirecttoHome();

@@ -24,6 +24,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
 import com.google.firebase.database.*;
@@ -126,8 +127,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         if (view == googleLogin) {
             Log.d(G_TAG, "Sign Method using Gmail Options");
-            // signInUsingGoogle();
-            hidekeypad();
+            signInUsingGoogle();
         }
 
         if (view == loginbutton) {
@@ -140,6 +140,60 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             resetPassword();
             hidekeypad();
         }
+    }
+
+    //Google login flow
+    //***********GMAIL LOGIN PROCESS ************//
+    private void signInUsingGoogle() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    /// Activity validation for Facebook and Gmail
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+
+        if (requestCode == RC_SIGN_IN) {
+
+
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            final GoogleSignInAccount account = task.getResult();
+
+            AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+
+            firebaseAuth.signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()) {
+                        //setuserProfile(guserProfile);
+                        //TODO need to get proper profile details and load the profile data in profile actvity
+
+                        final FirebaseUser firebaseUser = task.getResult().getUser();
+
+                        firebaseUser.updateEmail(account.getEmail()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                sendVerificationEmail();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                System.out.println(e.fillInStackTrace());
+                                firebaseUser.delete();
+
+                            }
+                        });
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.i(G_TAG, "Sign in using gmail failed", task.getException());
+                    }
+
+                }
+            });
+        }
+
     }
 
 
