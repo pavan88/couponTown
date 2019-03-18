@@ -59,16 +59,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private static final String G_TAG = "GoogleLogin";
     private static final String E_TAG = "EmailLogin";
 
-    //Profile
-    UserProfile userProfile;
-
     Intent intentHome;
 
     FirebaseStorage storage;
     StorageReference storageReference;
-
-
-    boolean emailExists;
 
 
     TextView resetPassword;

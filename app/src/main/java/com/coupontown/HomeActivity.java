@@ -67,12 +67,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     FirebaseAuth.AuthStateListener authStateListener;
 
 
-    //Firebase DB
-    private DatabaseReference mFirebaseDatabase;
-
-    boolean emailExists;
-
-
     //FAB changes
     private Boolean isFabOpen = false;
     private FloatingActionButton fab, fab1, fab2;
@@ -116,6 +110,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         initViews();
         loadJSON();
+        skiplogin = getIntent().getBooleanExtra("skipLogin", false);
+        if (!skiplogin)
+            setNavigationHeader(false);
 
         firebaseAuth = FirebaseAuth.getInstance();
 
@@ -249,7 +246,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             //Now read sms from ur mobile
             Toast.makeText(this, "Rate Item Clicked", Toast.LENGTH_LONG).show();
             Intent profileIntent = new Intent(this, RateActivity.class);
-            profileIntent.putExtra("userProfile", userProfile);
             startActivity(profileIntent);
 
         } else if (id == R.id.help) {
@@ -441,16 +437,13 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         Log.i("firebase", "Checking Authentication State");
         final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        skiplogin = getIntent().getBooleanExtra("skipLogin", false);
 
 
         if (skiplogin) {
             //This will execute if Skip Login is selected
             setNavigationHeader(true);
             return;
-        }
-
-        if (firebaseUser == null) {
+        } else if (firebaseUser == null) {
             redirecttoLogin();
         } else if (!firebaseUser.isEmailVerified() && firebaseUser.getEmail() != null) {
             firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -467,7 +460,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         } else {
             checkuserexists();
-            setNavigationHeader(false);
+            //
 
         }
     }
@@ -485,11 +478,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         UserProfile userProfile = new UserProfile();
 
-        if (firebaseUser.getDisplayName() == null) {
-            userProfile.setFull_name("Guest");
-        } else {
-            userProfile.setFull_name(firebaseUser.getDisplayName());
-        }
+
+        userProfile.setFull_name(firebaseUser.getDisplayName());
+
         userProfile.setPhonenumber(firebaseUser.getPhoneNumber());
         userProfile.setEmail(firebaseUser.getEmail());
         if (firebaseUser.getPhotoUrl() != null) {
@@ -529,6 +520,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                             Log.i("existinguser", userProfile.toString());
                             setUserProfile(userProfile);
 
+
                         } else {
 
                             createnewuserinfoindb();
@@ -546,8 +538,6 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-
-
     }
 
 
