@@ -1,10 +1,9 @@
 package com.coupontown;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -16,7 +15,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -32,10 +30,12 @@ import com.coupontown.api.AndroidVersion;
 import com.coupontown.api.JSONResponse;
 import com.coupontown.api.RequestInterface;
 import com.coupontown.model.UserProfile;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.gson.Gson;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.*;
 import com.squareup.picasso.Picasso;
-import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -44,6 +44,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 public class HomeActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnClickListener {
 
@@ -61,12 +62,18 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
     //FireBase
     FirebaseAuth firebaseAuth;
+    FirebaseAuth.AuthStateListener authStateListener;
 
 
     //FAB changes
     private Boolean isFabOpen = false;
     private FloatingActionButton fab, fab1, fab2;
     private Animation fab_open, fab_close, rotate_forward, rotate_backward;
+
+
+    UserProfile userProfile;
+
+    Boolean skiplogin;
 
 
     @Override
@@ -76,6 +83,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        setupFirebaseAuth();
+
 
         //FAB Button
         fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -98,21 +108,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
         initViews();
         loadJSON();
+        skiplogin = getIntent().getBooleanExtra("skipLogin", false);
+        if (!skiplogin)
+            setNavigationHeader(false);
 
         firebaseAuth = FirebaseAuth.getInstance();
-        Intent intent = getIntent();
-
-
-        UserProfile userProfile = intent.getParcelableExtra("profile");
-
-        if (userProfile != null) {
-            setNavigationHeader(false);
-            setUserProfile(userProfile);
-        }
-
-        if (userProfile == null) {
-            setNavigationHeader(true);
-        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -131,8 +131,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         try {
             user_email.setText(userProfile.getEmail());
             user_name.setText(userProfile.getFull_name());
-            String url = userProfile.getProfile_pic().toString();
-            Picasso.with(this).load(url).resize(150, 150).into(user_picture);
+            String url = userProfile.getPicurlstr();
+            // Picasso.with(this).load(url).resize(150, 150).into(user_picture);
+            Picasso.with(this).load(url).resize(600, 120).centerInside().into(user_picture);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -231,10 +232,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
 
 
         if (id == R.id.profile) {
-            Toast.makeText(this, "Profile Clicked", Toast.LENGTH_LONG).show();
             Intent profileIntent = new Intent(this, ProfileActivity.class);
-            startActivity(profileIntent);
+            profileIntent.putExtra("profile", userProfile);
 
+            startActivity(profileIntent);
 
         } else if (id == R.id.home) {
 
@@ -252,10 +253,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             Toast.makeText(this, "Clicked on Feedback", Toast.LENGTH_SHORT).show();
             sendFeedback();
         } else if (id == R.id.logout) {
-
-
             logout();
-
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -294,8 +292,10 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
         user_email = (TextView) header.findViewById(R.id.email);
         Menu menu = navigation_view.getMenu();
         MenuItem logoutItem = menu.findItem(R.id.logout);
+        MenuItem profileItem = menu.findItem(R.id.profile);
         if (skipLogin) {
             logoutItem.setVisible(false);
+            profileItem.setVisible(false);
             Button button = header.findViewById(R.id.guestlogin);
             button.setVisibility(View.VISIBLE);
             button.setText("LOGIN");
@@ -303,12 +303,11 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 @Override
                 public void onClick(View view) {
 
-                    Intent guestLogin = new Intent(HomeActivity.this, LoginActivity.class);
-                    startActivity(guestLogin);
-                    finish();
+                    redirecttoLogin();
                 }
             });
         }
+        //else it will logged in using gmail or normal registrations
 
 
     }
@@ -326,10 +325,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
                 FirebaseAuth.getInstance().signOut();
 
                 Toast.makeText(HomeActivity.this, "User Session Closed", Toast.LENGTH_LONG).show();
-                Intent loginIntent = new Intent(HomeActivity.this, LoginActivity.class);
-                loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(loginIntent);
-                finish();
+                redirecttoLogin();
             }
         });
 
@@ -346,7 +342,7 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        switch (id){
+        switch (id) {
             case R.id.fab:
 
                 animateFAB();
@@ -363,9 +359,9 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    public void animateFAB(){
+    public void animateFAB() {
 
-        if(isFabOpen){
+        if (isFabOpen) {
 
             fab.startAnimation(rotate_backward);
             fab1.startAnimation(fab_close);
@@ -383,10 +379,178 @@ public class HomeActivity extends AppCompatActivity implements NavigationView.On
             fab1.setClickable(true);
             fab2.setClickable(true);
             isFabOpen = true;
-            Log.d("Raj","open");
+            Log.d("Raj", "open");
 
         }
     }
 
+    private void setupFirebaseAuth() {
+        Log.i("1.firebase", "setupFirebaseAuth in HomeActivity");
+
+        authStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                if (firebaseUser != null) {
+                    if (firebaseUser.isEmailVerified()) {
+                        Log.i("HomeActivityFirebase", "onAuthStateChanged: User Signed in =>" + firebaseUser.getUid());
+                        Log.i("HomeActivityFirebase", "onAuthStateChanged: User Signed in Email =>" + firebaseUser.getEmail());
+
+                    } else {
+                        FirebaseAuth.getInstance().signOut();
+                        redirecttoLogin();
+                    }
+
+                } else {
+                    Log.i("HomeActivityFirebase", "onAuthStateChanged: User Signed out or Not Authenticated");
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.i("onStop", "Calling onStop Method");
+        if (authStateListener != null) {
+            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        Log.i("onStart", "Calling onStart Method");
+        super.onStart();
+        FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkAuthState();
+
+    }
+
+    private void checkAuthState() {
+
+        Log.i("firebase", "Checking Authentication State");
+        final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+
+        if (skiplogin) {
+            //This will execute if Skip Login is selected
+            setNavigationHeader(true);
+            return;
+        } else if (firebaseUser == null) {
+            redirecttoLogin();
+        } else if (!firebaseUser.isEmailVerified() && firebaseUser.getEmail() != null) {
+            firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Log.i("HomeActivityFirebase", "User need to verify email " + firebaseUser.getEmail());
+                        Toast.makeText(HomeActivity.this, "Please verify email to login", Toast.LENGTH_LONG).show();
+                        redirecttoLogin();
+                    }
+                }
+            });
+
+
+        } else {
+            checkuserexists();
+            //
+
+        }
+    }
+
+
+    private void redirecttoLogin() {
+        Intent loginIntent = new Intent(HomeActivity.this, LoginActivity.class);
+        loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(loginIntent);
+        finish();
+    }
+
+
+    private UserProfile mapFirebaseuser(FirebaseUser firebaseUser) {
+
+        UserProfile userProfile = new UserProfile();
+
+
+        userProfile.setFull_name(firebaseUser.getDisplayName());
+
+        userProfile.setPhonenumber(firebaseUser.getPhoneNumber());
+        userProfile.setEmail(firebaseUser.getEmail());
+        if (firebaseUser.getPhotoUrl() != null) {
+            userProfile.setPicurlstr(firebaseUser.getPhotoUrl().toString());
+        }
+        userProfile.setProvider(firebaseUser.getProviders().get(0));
+        userProfile.setLastLogin(new Date());
+        userProfile.setUid(firebaseUser.getUid());
+        userProfile.setVerified(firebaseUser.isEmailVerified());
+
+        return userProfile;
+    }
+
+
+    private void checkuserexists() {
+        Log.i("dbref", "Reading the data from Database");
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+
+        Query query = databaseReference.child("profile")
+                .orderByKey()
+                .equalTo(FirebaseAuth.getInstance().getCurrentUser().getUid());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChildren()) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        Log.i("dbkey", snapshot.getKey());
+                        String email = (String) snapshot.child("email").getValue();
+                        String uid = (String) snapshot.child("uid").getValue();
+
+                        if (email.equalsIgnoreCase(FirebaseAuth.getInstance().getCurrentUser().getEmail())
+                                && uid.equalsIgnoreCase(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+                            //User existing in DB. So just login
+                            //Construct the userprofile from DB.
+                            userProfile = snapshot.getValue(UserProfile.class);
+                            Log.i("existinguser", userProfile.toString());
+                            setUserProfile(userProfile);
+
+
+                        } else {
+
+                            createnewuserinfoindb();
+
+                        }
+                    }
+                } else {
+                    createnewuserinfoindb();
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+    private void createnewuserinfoindb() {
+        Log.i("dbregister", "Registering the user for the firsttime");
+        //create an entry in db for the first time
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                .child("profile")
+                .child(FirebaseAuth.getInstance()
+                        .getCurrentUser().getUid());
+        userProfile = mapFirebaseuser(FirebaseAuth.getInstance().getCurrentUser());
+        databaseReference.setValue(userProfile);
+        Log.i("FirebaseDatabase", "****** Profile Information saved Successfully ******");
+        Log.i("FirebaseDatabase", "************** D O N E **************");
+        setUserProfile(userProfile);
+    }
 
 }

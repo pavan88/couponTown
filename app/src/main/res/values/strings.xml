@@ -24,4 +24,17 @@
     <string name="title_send_feedback">Title of chooser dialog.</string>
     <string name="skiplogin">SkipLogin</string>
 
+
+    <!-- Profile Fields -->
+    <string name="hint_name">Full Name</string>
+    <string name="hint_image">Choose</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_number">Mobile</string>
+
+    <string name="err_msg_name">Enter your full name</string>
+    <string name="err_msg_email">Enter valid email address</string>
+    <string name="err_msg_password">Enter the password</string>
+    <string name="btn_sign_up">update</string>
+
 </resources>

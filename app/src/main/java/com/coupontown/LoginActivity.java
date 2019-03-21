@@ -1,5 +1,7 @@
 package com.coupontown;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -8,27 +10,30 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.coupontown.model.UserProfile;
-import com.facebook.*;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.*;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.firebase.database.*;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.util.Date;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
-
 
     //Email
     private Button loginbutton;
@@ -36,33 +41,32 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private EditText password;
 
 
-    FirebaseAuth firebaseAuth;
-
-    private static final String FB_TAG = "FacebookLogin";
-    private static final String G_TAG = "GoogleLogin";
-    private static final String E_TAG = "EmailLogin";
-
+    //SkipLogin views
+    TextView skipLogin;
 
     //Google
     private static final int RC_SIGN_IN = 9001;
+
     private GoogleSignInClient mGoogleSignInClient;
-    private SignInButton g_loginButton;
-
-    //Facebook
-    //Facebook Login
-    private LoginButton fb_loginButton;
+    private SignInButton googleLogin;
 
 
-    Intent intent;
+    //Firebase Auth
+    FirebaseAuth firebaseAuth;
+    FirebaseAuth.AuthStateListener authStateListener;
+
+
+    private static final String SKIPLOGIN_TAG = "SKIP";
+    private static final String G_TAG = "GoogleLogin";
+    private static final String E_TAG = "EmailLogin";
+
+    Intent intentHome;
+
+    FirebaseStorage storage;
+    StorageReference storageReference;
+
 
     TextView resetPassword;
-
-    TextView skipLogin;
-
-    public boolean isLoggedIn() {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        return firebaseUser != null;
-    }
 
 
     @Override
@@ -71,52 +75,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        Toolbar toolbar
-                = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-
-        if (isLoggedIn()) {
-            Log.i("login", "User Already Logged in");
-            FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-            UserInfo userInfo = firebaseUser.getProviderData().get(0);
-
-            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("google.com")) {
-                //Re initiating the gmail login process
-                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(getString(R.string.default_web_client_id))
-                        .requestEmail().requestProfile()
-                        .build();
-
-                mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-                signInUsingGoogle();
-            }
-            if (firebaseUser.getProviders().get(0).equalsIgnoreCase("facebook.com")) {
-
-//                callbackManager = CallbackManager.Factory.create();
-//                fb_loginButton = findViewById(R.id.fb_loginButton);
-//
-//                signInUsingFacebook();
-//                intent = new Intent(this, HomeActivity.class);
-            }
-
-        }
-
-
-        firebaseAuth = FirebaseAuth.getInstance();
-
-        //Email Based Login Initializations Button
-
-        loginbutton = findViewById(R.id.buttonLogin);
-
-        email = findViewById(R.id.email);
-
-        password = findViewById(R.id.password);
-
-        loginbutton.setOnClickListener(this);
-
-        g_loginButton = findViewById(R.id.g_loginButton);
-        g_loginButton.setOnClickListener(this);
+        setupFirebaseAuth();
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
@@ -125,104 +87,79 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
+        firebaseAuth = FirebaseAuth.getInstance();
 
-        // Facebook Login Initializations
-        // callbackManager = CallbackManager.Factory.create();
-        // fb_loginButton = findViewById(R.id.fb_loginButton);
-        //fb_loginButton.setOnClickListener(this);
+        //SkipLogin
+        skipLogin = findViewById(R.id.skipLoginTv);
+        skipLogin.setOnClickListener(this);
 
+        //Google
+        googleLogin = findViewById(R.id.g_loginButton);
+        googleLogin.setOnClickListener(this);
+
+        //Email
+        loginbutton = findViewById(R.id.buttonLogin);
+        email = findViewById(R.id.email);
+        password = findViewById(R.id.password);
+        loginbutton.setOnClickListener(this);
 
         //Reset Password
         resetPassword = findViewById(R.id.resetPassword);
         resetPassword.setOnClickListener(this);
 
-        //SkipLogin
-        skipLogin = findViewById(R.id.skip);
-        skipLogin.setOnClickListener(this);
 
-        intent = new Intent(this, HomeActivity.class);
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
+
+        intentHome = new Intent(this, HomeActivity.class);
 
     }
 
-
     @Override
     public void onClick(View view) {
+
+        if (view == skipLogin) {
+            Intent intent = new Intent(this, HomeActivity.class);
+            intent.putExtra("skipLogin", true);
+            startActivity(intent);
+            finish();
+        }
+
+        if (view == googleLogin) {
+            Log.d(G_TAG, "Sign Method using Gmail Options");
+            signInUsingGoogle();
+        }
 
         if (view == loginbutton) {
             Log.d(E_TAG, "Sign Method using Normal Options");
             loginExistingUser();
         }
 
-        if (view == g_loginButton) {
-            Log.d(G_TAG, "Sign Method using Gmail Options");
-            signInUsingGoogle();
-        }
-
-//        if (view == fb_loginButton) {
-//            Log.d(G_TAG, "Sign Method using Facebook Options");
-//            //signInUsingFacebook();
-//        }
-
         if (view == resetPassword) {
             Log.d("Reset", "Reset the password");
             resetPassword();
+            hidekeypad();
         }
-
-        if (view == skipLogin) {
-            Log.d("SkipLogin", "SkipLogin");
-            intent = new Intent(this, HomeActivity.class);
-            intent.putExtra("skiplogin", Boolean.TRUE);
-            startActivity(intent);
-            finish();
-        }
-
-
     }
 
-    private void resetPassword() {
-        final String emailStr = email.getText().toString().trim();
-
-        if (TextUtils.isEmpty(emailStr)) {
-            email.setError("Enter email address to reset password");
-            Toast.makeText(LoginActivity.this, "Enter your registered email id", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!isValidEmail(emailStr)) {
-            Toast.makeText(LoginActivity.this, "Invalid Email", Toast.LENGTH_LONG).show();
-            return;
-
-        }
-        
-        firebaseAuth.sendPasswordResetEmail(emailStr)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, "We have sent you instructions to reset your password!", Toast.LENGTH_LONG).show();
-                            startActivity(getIntent());
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Failed to send, reset email!", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
+    //Google login flow
+    //***********GMAIL LOGIN PROCESS ************//
+    private void signInUsingGoogle() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
-
 
     /// Activity validation for Facebook and Gmail
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+
         if (requestCode == RC_SIGN_IN) {
-            final UserProfile guserProfile = new UserProfile();
 
 
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            // Google Sign In was successful, authenticate with Firebase
-            GoogleSignInAccount account = task.getResult();
-            guserProfile.setEmail(account.getEmail());
+            final GoogleSignInAccount account = task.getResult();
 
             AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
 
@@ -230,28 +167,40 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()) {
-                        Toast.makeText(LoginActivity.this, "Login Success via Gmail", Toast.LENGTH_LONG).show();
-                        setuserProfile(guserProfile);
+                        //setuserProfile(guserProfile);
+                        //TODO need to get proper profile details and load the profile data in profile actvity
 
+                        final FirebaseUser firebaseUser = task.getResult().getUser();
+
+                        firebaseUser.updateEmail(account.getEmail()).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                sendVerificationEmail();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                System.out.println(e.fillInStackTrace());
+                                firebaseUser.delete();
+
+                            }
+                        });
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.i(G_TAG, "Sign in using gmail failed", task.getException());
-                        signOut();
                     }
 
                 }
             });
-        } else {
-            // Pass the activity result back to the Facebook SDK
-            //  callbackManager.onActivityResult(requestCode, resultCode, data);
-
         }
+
     }
 
 
     private void loginExistingUser() {
         final String emailStr = email.getText().toString().trim();
         final String passwordStr = password.getText().toString().trim();
+
 
         if (TextUtils.isEmpty(emailStr)) {
             email.setError("Enter email address!");
@@ -271,6 +220,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         }
 
+        email.setText("");
+        password.setText("");
 
         //1. Check email exists
         firebaseAuth.fetchSignInMethodsForEmail(emailStr).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<SignInMethodQueryResult>() {
@@ -289,20 +240,33 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         });
     }
 
+
     //User Existing. So login with valid credentails.
     private void signin(final String emailStr, final String passwordStr) {
-        firebaseAuth.signInWithEmailAndPassword(emailStr, passwordStr).addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+        firebaseAuth.signInWithEmailAndPassword(emailStr, passwordStr)
+                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (!task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this, "Please verify the email/password", Toast.LENGTH_LONG).show();
+                            task.getException();
+                        } else {
+                            if (task.getResult().getUser().isEmailVerified()) {
+                                Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
+                                redirecttoHome();
+                            } else {
+                                Toast.makeText(LoginActivity.this, "Please verify the Email, before login", Toast.LENGTH_LONG).show();
+                                sendVerificationEmail();
+                            }
+
+                        }
+
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
             @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if (!task.isSuccessful()) {
-                    Toast.makeText(LoginActivity.this, "Please verify the email/password", Toast.LENGTH_LONG).show();
-                    task.getException();
-                } else {
-                    Toast.makeText(LoginActivity.this, "Login Success via Email & Password", Toast.LENGTH_LONG).show();
-                    UserProfile userProfile = new UserProfile();
-                    userProfile.setEmail(emailStr);
-                    setuserProfile(userProfile);
-                }
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(LoginActivity.this, "Authentication Failed", Toast.LENGTH_LONG).show();
+                Log.getStackTraceString(e);
 
             }
         });
@@ -311,140 +275,134 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     //Check User exists, if not register
     private void registeruser(final String emailStr, final String passwordStr) {
-        firebaseAuth.createUserWithEmailAndPassword(emailStr, passwordStr)
+        FirebaseAuth.getInstance().createUserWithEmailAndPassword(emailStr, passwordStr)
                 .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (!task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
-                            task.getException();
+                        if (task.isSuccessful()) {
+                            Log.i("register", "onComplete: Successful registration via email and password =>" + task.isSuccessful());
+                            Toast.makeText(LoginActivity.this, "User Email Created, Please check email to verify", Toast.LENGTH_LONG).show();
+                            sendVerificationEmail();
+
+                            FirebaseAuth.getInstance().signOut();
+
                         } else {
-                            Toast.makeText(LoginActivity.this, "User Email Created", Toast.LENGTH_LONG).show();
+                            Toast.makeText(LoginActivity.this, "Registration Failed", Toast.LENGTH_LONG).show();
+
                         }
                     }
                 });
-        startActivity(getIntent());
-        finish();
+
     }
 
 
-    //***********GMAIL LOGIN PROCESS ************//
-    private void signInUsingGoogle() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-
-    //***********Facebook LOGIN PROCESS ************//
-
-//    private void signInUsingFacebook() {
-//        fb_loginButton.setReadPermissions("email", "public_profile");
-//
-//        fb_loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-//            @Override
-//            public void onSuccess(LoginResult loginResult) {
-//
-//                handleFacebookAccessToken(loginResult.getAccessToken());
-//            }
-//
-//            @Override
-//            public void onCancel() {
-//
-//            }
-//
-//            @Override
-//            public void onError(FacebookException error) {
-//                Log.e(FB_TAG, "Error" + error.toString());
-//            }
-//        });
-//    }
-
-//    private void handleFacebookAccessToken(AccessToken token) {
-//
-//        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-//        firebaseAuth.signInWithCredential(credential)
-//                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<AuthResult> task) {
-//                        if (task.isSuccessful()) {
-//
-//                            goMainScreenViaFB();
-//
-//                        } else {
-//                            // If sign in fails, display a message to the user.
-//                            Log.w(FB_TAG, "signInWithCredential:failure", task.getException());
-//                            Toast.makeText(LoginActivity.this, "Authentication failed via facebook",
-//                                    Toast.LENGTH_LONG).show();
-//                        }
-//
-//                        // ...
-//                    }
-//                });
-//    }
-
-//    private void goMainScreenViaFB() {
-//        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-//        if (accessToken == null) return;
-//        GraphRequest data_request = GraphRequest.newMeRequest(
-//                accessToken,
-//                new GraphRequest.GraphJSONObjectCallback() {
-//                    @Override
-//                    public void onCompleted(
-//                            JSONObject json_object,
-//                            GraphResponse response) {
-//                        UserProfile userProfile = new UserProfile();
-//                        try {
-//                            userProfile.setEmail(json_object.getString("email"));
-//                            setuserProfile(userProfile);
-//                        } catch (JSONException e) {
-//                            Toast.makeText(LoginActivity.this, "Authentication failed via facebook",
-//                                    Toast.LENGTH_LONG).show();
-//                            signOut();
-//                            e.printStackTrace();
-//                        }
-//
-//                    }
-//                });
-//        Bundle permission_param = new Bundle();
-//        // permission_param.putString("fields", "id,name,email,picture.width(500).height(500)");
-//        permission_param.putString("fields", "id,name,email,picture.width(200).height(200)");
-//        data_request.setParameters(permission_param);
-//        data_request.executeAsync();
-//    }
-
-    private void setuserProfile(UserProfile userProfile) {
-
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        //Check user isnew
-        //is Email Verified -> NO then new
-
-
-        //Log.i(G_TAG, user.getEmail());
-        if (user != null) {
-            userProfile.setPhonenumber(user.getPhoneNumber());
-            userProfile.setProvider(user.getProviders().get(0));
-            userProfile.setFull_name(user.getDisplayName());
-            userProfile.setProfile_pic(user.getPhotoUrl());
-            userProfile.setUid(user.getUid());
-            userProfile.isVerified(user.isEmailVerified());
-
-            intent.putExtra("profile", userProfile);
-
-            Log.i(G_TAG, userProfile.toString());
-
-            startActivity(intent);
-            finish();
-        }
-    }
-
-    private void signOut() {
-        firebaseAuth.getInstance().signOut();
-        firebaseAuth.signOut();
-    }
-
-    public final static boolean isValidEmail(String emailID) {
+    private final static boolean isValidEmail(String emailID) {
 
         return android.util.Patterns.EMAIL_ADDRESS.matcher(emailID).matches();
 
     }
+
+
+    private void resetPassword() {
+        final String emailStr = email.getText().toString().trim();
+
+        if (TextUtils.isEmpty(emailStr)) {
+            email.setError("Enter email address to reset password");
+            Toast.makeText(LoginActivity.this, "Enter your registered email id", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isValidEmail(emailStr)) {
+            Toast.makeText(LoginActivity.this, "Invalid Email", Toast.LENGTH_LONG).show();
+            return;
+
+        }
+
+        firebaseAuth.sendPasswordResetEmail(emailStr)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(LoginActivity.this, "We have sent you instructions to reset your password!", Toast.LENGTH_LONG).show();
+                            startActivity(getIntent());
+                        } else {
+                            Toast.makeText(LoginActivity.this, "Failed to send, reset email!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+    }
+
+    private void hidekeypad() {
+        InputMethodManager inputManager = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                InputMethodManager.HIDE_NOT_ALWAYS);
+        //  this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+    }
+
+    private void setupFirebaseAuth() {
+
+        authStateListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+                if (firebaseUser != null) {
+                    if (firebaseUser.isEmailVerified()) {
+                        Log.i("1.Firebase", "onAuthStateChanged: User Signed in =>" + firebaseUser.getUid());
+                        Log.i("1.Firebase", "onAuthStateChanged: User Signed in Email =>" + firebaseUser.getEmail());
+                        redirecttoHome();
+                    }
+
+                } else {
+                    Log.i("1.Firebase", "onAuthStateChanged: User Signed out or Not Authenticated");
+                }
+            }
+        };
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (authStateListener != null) {
+            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
+    }
+
+    private void sendVerificationEmail() {
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (firebaseUser != null) {
+            firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(LoginActivity.this, "Sent Email Verification Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Failed::Sent Email Verification Email!", Toast.LENGTH_LONG).show();
+                        Log.i("2.Firebase", "failed sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                    }
+                }
+            });
+        }
+    }
+
+
+    private void redirecttoHome() {
+        Intent loginIntent = new Intent(this, HomeActivity.class);
+        loginIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(loginIntent);
+        finish();
+    }
 }
+
+
+
+
