@@ -96,6 +96,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
         number.setOnClickListener(this);
 
 
+
         //
         //Need to write the logic for read & update
 
@@ -113,8 +114,8 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
         user_picture = findViewById(R.id.imageViewProfile);
         //Check the pic exists in firebase storage
-        Picasso.with(ProfileActivity.this).load(userProfileObject.getProfile_pic()).resize(1200, 450)
-                .centerInside().into(imageView);
+        Picasso.with(ProfileActivity.this).load(userProfileObject.getPicurlstr()).resize(1200, 450)
+                .centerInside().into(user_picture);
 
 
         //
