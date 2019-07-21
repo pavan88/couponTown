@@ -11,63 +11,72 @@
     tools:context=".MoreDetailsActivity"
     tools:showIn="@layout/activity_more_details">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="25dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="32dp"
-        android:gravity="center_vertical"
-        android:lineSpacingExtra="14sp"
-        android:text="Activate Deal"
-        android:textAlignment="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        style="@style/AppTheme.Button"
-        app:layout_constraintStart_toStartOf="parent" />
-
 
     <TextView
         android:id="@+id/shipper_field"
-        android:layout_width="235dp"
-        android:layout_height="50dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="120dp"
+        android:layout_width="295dp"
+        android:layout_height="140dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="8dp"
         android:hint="Was this useful Deal ?"
-        app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/moredetails_desc" />
+
+    <TextView
+        android:id="@+id/moredetails_desc"
+        android:layout_width="296dp"
+        android:layout_height="250dp"
+        android:layout_marginTop="64dp"
+        android:hint="Description of the offer"
+        android:lineSpacingExtra="12sp"
+        android:lines="6"
+        android:maxLines="10"
+        android:minLines="5"
+        android:textIsSelectable="true"
+        android:scrollbars = "vertical"
+        android:textSize="15sp"
+        android:textStyle="normal|bold|italic"
+        app:layout_constraintEnd_toEndOf="@+id/shipper_field"
+        app:layout_constraintStart_toStartOf="@+id/shipper_field"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <RatingBar
-        android:layout_width="235dp"
+        android:id="@+id/ratingBar"
+        android:layout_width="238dp"
         android:layout_height="50dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="32dp"
         android:rating="5"
         android:stepSize="1"
         android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="@+id/shipper_field"
-        app:layout_constraintStart_toStartOf="@+id/shipper_field"
-        app:layout_constraintTop_toBottomOf="@+id/shipper_field" />
+        app:layout_constraintStart_toStartOf="@+id/shipper_field" />
+
+    <Button
+        android:id="@+id/button"
+        style="@style/AppTheme.Button"
+        android:layout_width="141dp"
+        android:layout_height="63dp"
+        android:layout_margin="25dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center_vertical"
+        android:lineSpacingExtra="14sp"
+        android:text="Activate Deal"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/ratingBar"
+        app:layout_constraintStart_toStartOf="@+id/ratingBar" />
 
     <TextView
-        android:id="@+id/comments"
-        android:layout_width="286dp"
-        android:layout_height="33dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="128dp"
-        android:hint="Description of the offer"
-        app:layout_constraintBottom_toTopOf="@+id/shipper_field"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.3" />
+        android:id="@+id/desc_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:text="Description:-"
+        app:layout_constraintStart_toStartOf="@+id/moredetails_desc"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </android.support.constraint.ConstraintLayout>

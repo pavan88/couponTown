@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -143,7 +143,6 @@ public class MainActivity extends AppCompatActivity
 
         if(id == R.id.profile){
             Intent profileIntent = new Intent(this, ProfileActivity.class);
-
             startActivity(profileIntent);
             finish();
         }

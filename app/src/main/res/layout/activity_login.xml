@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -26,19 +25,21 @@
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/userEmail"
-               style="@style/TextInputLayout">
+                style="@style/TextInputLayout">
 
                 <android.support.design.widget.TextInputEditText
                     android:id="@+id/email"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingBottom="25dp"
                     android:hint="Email"
-                    android:inputType="textEmailAddress"/>
+                    android:inputType="textEmailAddress" />
             </android.support.design.widget.TextInputLayout>
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/userPassword"
                 android:layout_below="@id/userEmail"
+                app:passwordToggleEnabled="true"
                 style="@style/TextInputLayout">
 
                 <android.support.design.widget.TextInputEditText
@@ -47,7 +48,7 @@
                     android:layout_height="wrap_content"
                     android:hint="Password"
                     android:inputType="textPassword"
-                    android:singleLine="false" />
+                    android:paddingBottom="25dp" />
             </android.support.design.widget.TextInputLayout>
 
             <Button
@@ -56,18 +57,18 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/userPassword"
                 android:text="@string/login_button"
-                style="@style/AppTheme.Button"
-            />
+                style="@style/AppTheme.Button" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
                 style="?android:progressBarPadding"
                 android:layout_width="wrap_content"
-                android:layout_height="56dp"
+                android:layout_height="wrap_content"
                 android:layout_below="@id/buttonLogin"
+                android:layout_alignParentEnd="true"
                 android:layout_marginStart="10dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginTop="50dp"
+                android:layout_marginEnd="160dp"
                 android:layout_marginBottom="10dp"
                 android:padding="5dp"
                 android:visibility="invisible"

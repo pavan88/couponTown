@@ -65,7 +65,7 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
         loginbutton.setOnClickListener(this);
 
 
-        spinner = (ProgressBar)findViewById(R.id.progressBar);
+        spinner = findViewById(R.id.progressBar);
 
 
     }
@@ -129,9 +129,11 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
                 emailexists = task.getResult().getSignInMethods().isEmpty();
                 if (emailexists) {
                     registeruser(emailStr, passwordStr);
+                    spinner.setVisibility(View.GONE);
                 } else {
                     //User Exists , So sign in
                     signin(emailStr, passwordStr);
+                    spinner.setVisibility(View.GONE);
                 }
             }
         });
@@ -223,15 +225,11 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
     private void hidekeypad() {
         InputMethodManager inputManager = (InputMethodManager)
                 getSystemService(Context.INPUT_METHOD_SERVICE);
-
         inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
                 InputMethodManager.HIDE_NOT_ALWAYS);
-        //  this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
     private void setupFirebaseAuth() {
-
-
         authStateListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {

@@ -56,4 +56,12 @@ public class MoreDetails implements Parcelable {
             return new MoreDetails[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "MoreDetails{" +
+                "detail_desc='" + detail_desc + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }
