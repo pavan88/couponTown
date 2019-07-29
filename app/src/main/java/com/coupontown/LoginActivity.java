@@ -34,7 +34,7 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
     private static final String SKIPLOGIN_TAG = "SKIP";
     private static final String G_TAG = "GoogleLogin";
     private static final String E_TAG = "EmailLogin";
-
+    private static final String FIREBASE = "Firebase";
 
 
     //Firebase Auth
@@ -54,9 +54,10 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
 
         setSupportActionBar(toolbar);
 
+        firebaseAuth = FirebaseAuth.getInstance();
+
         setupFirebaseAuth();
 
-        firebaseAuth = FirebaseAuth.getInstance();
 
         //Email
         loginbutton = findViewById(R.id.buttonLogin);
@@ -79,23 +80,24 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
             loginExistingUser();
             hidekeypad();
         }
-
-
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         if (authStateListener != null) {
-            FirebaseAuth.getInstance().removeAuthStateListener(authStateListener);
+            firebaseAuth.removeAuthStateListener(authStateListener);
         }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        FirebaseAuth.getInstance().addAuthStateListener(authStateListener);
+        firebaseAuth.addAuthStateListener(authStateListener);
     }
+
+
+    //----------- END OF OVERRIDE --------------//
 
 
     private void loginExistingUser() {
@@ -204,7 +206,7 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
     }
 
     private void sendVerificationEmail() {
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
 
         if (firebaseUser != null) {
             firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -212,10 +214,10 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
                 public void onComplete(@NonNull Task<Void> task) {
                     if (task.isSuccessful()) {
                         Toast.makeText(LoginActivity.this, "Sent Email Verification Email!", Toast.LENGTH_LONG).show();
-                        Log.i("2.Firebase", "sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                        Log.i(FIREBASE, "sendVerificationEmail: onComplete =>" + task.isSuccessful());
                     } else {
                         Toast.makeText(LoginActivity.this, "Failed::Sent Email Verification Email!", Toast.LENGTH_LONG).show();
-                        Log.i("2.Firebase", "failed sendVerificationEmail: onComplete =>" + task.isSuccessful());
+                        Log.i(FIREBASE, "failed sendVerificationEmail: onComplete =>" + task.isSuccessful());
                     }
                 }
             });
@@ -240,8 +242,6 @@ public class LoginActivity extends AppCompatActivity  implements View.OnClickLis
                         Log.i("1.Firebase", "onAuthStateChanged: User Signed in Email =>" + firebaseUser.getEmail());
                         redirecttoHome();
                     }
-                } else {
-                    Log.i("1.Firebase", "onAuthStateChanged: User Signed out or Not Authenticated");
                 }
             }
         };

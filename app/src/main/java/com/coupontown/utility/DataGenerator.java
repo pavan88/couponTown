@@ -8,7 +8,7 @@ import java.util.List;
 
 public class DataGenerator {
 
-    private final static String android_image_urls[] = {
+    public final static String android_image_urls[] = {
             "https://api.learn2crack.com/android/images/donut.png",
             "https://api.learn2crack.com/android/images/eclair.png",
             "https://api.learn2crack.com/android/images/froyo.png",
@@ -40,7 +40,8 @@ public class DataGenerator {
         itemOfferModel.setDescription("Big Shopping Days: Upto to 80% Off on Mobiles, Electronics, Furniture & more..");
         itemOfferModel.setCategory("Applicances");
         itemOfferModel.setName("FlopKart");
-
+        itemOfferModel.setMoreDetails(moreDetails());
+        itemOfferModel.setStatus("New!!");
         itemOfferModel.setLogo(android_image_urls[0]);
 
         return itemOfferModel;
@@ -52,6 +53,8 @@ public class DataGenerator {
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
         itemOfferModel.setLogo(android_image_urls[1]);
+        itemOfferModel.setStatus("Exipring Soon!!");
+        itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
     }
 
@@ -61,6 +64,7 @@ public class DataGenerator {
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
         itemOfferModel.setLogo(android_image_urls[2]);
+        itemOfferModel.setStatus("Expired!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
     }
@@ -71,6 +75,8 @@ public class DataGenerator {
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
         itemOfferModel.setLogo(android_image_urls[3]);
+        itemOfferModel.setStatus("Closed!!");
+        itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
     }
 

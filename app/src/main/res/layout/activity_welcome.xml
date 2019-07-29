@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -46,6 +45,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginBottom="32dp"
         android:visibility="invisible"
+        android:textSize="30sp"
         android:text="Welcome to best offer deal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/imageView"

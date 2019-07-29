@@ -17,7 +17,10 @@ public class ItemOfferModel implements Parcelable {
 
     private Uri item_img;
 
+    private String status;
+
     private MoreDetails moreDetails;
+
 
 
     public String getCategory() {
@@ -60,6 +63,14 @@ public class ItemOfferModel implements Parcelable {
         this.item_img = item_img;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public MoreDetails getMoreDetails() {
         return moreDetails;
     }
@@ -67,7 +78,6 @@ public class ItemOfferModel implements Parcelable {
     public void setMoreDetails(MoreDetails moreDetails) {
         this.moreDetails = moreDetails;
     }
-
 
     @Override
     public int describeContents() {
@@ -81,6 +91,7 @@ public class ItemOfferModel implements Parcelable {
         dest.writeString(this.logo);
         dest.writeString(this.description);
         dest.writeParcelable(this.item_img, flags);
+        dest.writeString(this.status);
         dest.writeParcelable(this.moreDetails, flags);
     }
 
@@ -93,6 +104,7 @@ public class ItemOfferModel implements Parcelable {
         this.logo = in.readString();
         this.description = in.readString();
         this.item_img = in.readParcelable(Uri.class.getClassLoader());
+        this.status = in.readString();
         this.moreDetails = in.readParcelable(MoreDetails.class.getClassLoader());
     }
 
@@ -116,6 +128,7 @@ public class ItemOfferModel implements Parcelable {
                 ", logo='" + logo + '\'' +
                 ", description='" + description + '\'' +
                 ", item_img=" + item_img +
+                ", status='" + status + '\'' +
                 ", moreDetails=" + moreDetails +
                 '}';
     }
