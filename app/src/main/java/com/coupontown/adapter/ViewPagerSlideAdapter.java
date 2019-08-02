@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,8 +38,10 @@ public class ViewPagerSlideAdapter extends PagerAdapter {
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
+
         View view = layoutInflater.inflate(R.layout.imageslide_layout, container, false);
         ImageView imageView = view.findViewById(R.id.imageviewslider);
+
         imageView.setImageResource(images[pos]);
         if (pos >= images.length - 1)
             pos = 0;
@@ -53,7 +56,6 @@ public class ViewPagerSlideAdapter extends PagerAdapter {
 
     @Override
     public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
-
         ViewPager viewPager = (ViewPager) container;
         View view = (View) object;
         viewPager.removeView(view);

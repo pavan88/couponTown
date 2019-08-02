@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity
     private void checkAuthState() {
 
         Log.i(FIREBASE, "Checking Authentication State");
-        final FirebaseUser firebaseUser = firebaseAuth.getCurrentUser();
+        final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
 
        if (firebaseUser == null) {

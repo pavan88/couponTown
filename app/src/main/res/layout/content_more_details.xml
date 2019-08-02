@@ -17,8 +17,10 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
         android:background="@color/browser_actions_divider_color"
         android:hint="Was this useful Deal ?"
+        app:layout_constraintBottom_toTopOf="@+id/ratingBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/moredetails_desc" />
@@ -26,8 +28,8 @@
     <TextView
         android:id="@+id/moredetails_desc"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_marginTop="8dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
         android:background="@color/browser_actions_divider_color"
         android:hint="Description of the offer"
         android:lineSpacingExtra="12sp"
@@ -44,9 +46,9 @@
 
     <RatingBar
         android:id="@+id/ratingBar"
-        android:layout_width="240dp"
-        android:layout_height="40dp"
-        android:layout_marginBottom="8dp"
+        android:layout_width="wrap_content"
+        android:layout_height="57dp"
+        android:layout_margin="8dp"
         android:rating="5"
         android:stepSize="1"
         android:visibility="visible"
@@ -57,10 +59,8 @@
     <Button
         android:id="@+id/button"
         style="@style/AppTheme.Button"
-        android:layout_width="140dp"
+        android:layout_width="wrap_content"
         android:layout_height="60dp"
-        android:layout_margin="25dp"
-        android:layout_marginBottom="16dp"
         android:gravity="center_vertical"
         android:lineSpacingExtra="14sp"
         android:text="Activate Deal"

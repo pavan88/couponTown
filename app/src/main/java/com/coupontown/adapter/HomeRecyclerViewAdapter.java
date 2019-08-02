@@ -58,7 +58,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         viewHolder.status.setText(mFilteredList.get(position).getStatus());
 
         Picasso.with(context).load(itemList.get(position)
-                .getLogo())
+                .getItem_img())
                 .resize(75, 75)
                 .into(viewHolder.circleImageView);
 

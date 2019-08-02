@@ -9,6 +9,7 @@ public class MoreDetails implements Parcelable {
 
     private String comment;
 
+    private String appurl;
 
     public String getDetail_desc() {
         return detail_desc;
@@ -26,6 +27,14 @@ public class MoreDetails implements Parcelable {
         this.comment = comment;
     }
 
+    public String getAppurl() {
+        return appurl;
+    }
+
+    public void setAppurl(String appurl) {
+        this.appurl = appurl;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -35,6 +44,7 @@ public class MoreDetails implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(this.detail_desc);
         dest.writeString(this.comment);
+        dest.writeString(this.appurl);
     }
 
     public MoreDetails() {
@@ -43,6 +53,7 @@ public class MoreDetails implements Parcelable {
     protected MoreDetails(Parcel in) {
         this.detail_desc = in.readString();
         this.comment = in.readString();
+        this.appurl = in.readString();
     }
 
     public static final Parcelable.Creator<MoreDetails> CREATOR = new Parcelable.Creator<MoreDetails>() {
@@ -62,6 +73,7 @@ public class MoreDetails implements Parcelable {
         return "MoreDetails{" +
                 "detail_desc='" + detail_desc + '\'' +
                 ", comment='" + comment + '\'' +
+                ", appurl='" + appurl + '\'' +
                 '}';
     }
 }
