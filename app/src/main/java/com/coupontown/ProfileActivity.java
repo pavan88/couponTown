@@ -1,9 +1,9 @@
 package com.coupontown;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 public class ProfileActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -27,4 +27,5 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View v) {
         this.onBackPressed();
     }
+
 }

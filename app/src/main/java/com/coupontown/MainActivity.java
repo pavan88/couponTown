@@ -2,16 +2,6 @@ package com.coupontown;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,16 +10,31 @@ import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 import com.coupontown.adapter.HomeRecyclerViewAdapter;
 import com.coupontown.adapter.ViewPagerSlideAdapter;
 import com.coupontown.model.ItemOfferModel;
 import com.coupontown.utility.DataGenerator;
+import com.coupontown.utility.FirebaseUtil;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -52,6 +57,11 @@ public class MainActivity extends AppCompatActivity
     FirebaseAuth firebaseAuth;
     FirebaseAuth.AuthStateListener authStateListener;
 
+    //
+    FirebaseDatabase firebaseDatabase;
+    DatabaseReference databaseReference;
+    FirebaseUser firebaseUser;
+
 
     private RecyclerView recyclerView;
     private HomeRecyclerViewAdapter recyclerViewAdapter;
@@ -73,6 +83,11 @@ public class MainActivity extends AppCompatActivity
         getSupportActionBar().setTitle("");
         TextView textView = findViewById(R.id.toolbartitle);
         textView.setText(R.string.app_name);
+
+        //
+        firebaseAuth = FirebaseUtil.firebaseAuth;
+        firebaseUser = FirebaseUtil.firebaseUser;
+        //
 
         CircleImageView circleImageView = findViewById(R.id.logoXmarks);
 
@@ -114,11 +129,18 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        checkAuthState();
+    protected void onStart() {
+        super.onStart();
+
+
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //TODO add Progress bar , as Profile Builder
+        checkAuthState();
+    }
 
     @Override
     public void onBackPressed() {
@@ -127,7 +149,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
-            firebaseAuth.signOut();
+            FirebaseUtil.firebaseAuth.signOut();
             redirecttoLogin();
         }
     }
@@ -221,10 +243,8 @@ public class MainActivity extends AppCompatActivity
     private void checkAuthState() {
 
         Log.i(FIREBASE, "Checking Authentication State");
-        final FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-
-       if (firebaseUser == null) {
+        if (firebaseUser == null) {
             redirecttoLogin();
         } else if (!firebaseUser.isEmailVerified() && firebaseUser.getEmail() != null) {
             firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -238,14 +258,55 @@ public class MainActivity extends AppCompatActivity
                 }
             });
         } else {
+            Log.i(FIREBASE, "Verified User=>" + firebaseUser.getEmail());
             checkuserexists();
             //
         }
     }
 
     private void checkuserexists() {
+
         Log.i(FIREBASE, "Reading the data from Database");
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("profile");
+
+        Query query = databaseReference.orderByKey().equalTo(firebaseUser.getUid());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.hasChildren()) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        Log.i(FIREBASE, snapshot.getKey());
+                        String email = (String) snapshot.child("email").getValue();
+                        String uid = (String) snapshot.child("uid").getValue();
+
+                        if (!(email.equalsIgnoreCase(firebaseUser.getEmail()) && uid.equalsIgnoreCase(firebaseUser.getUid()))) {
+                            // User is not existing in DB , So add an entry in firebase realtime db
+                            createnewuserinfoindb();
+                        }
+                    }
+                } else {
+                    createnewuserinfoindb();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.getStackTraceString(databaseError.toException());
+            }
+        });
+    }
+
+
+    private void createnewuserinfoindb() {
+        Log.i(FIREBASE, "Registering the user for the firsttime in firebase");
+        //create an entry in db for the first time
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+                .getReference("profile").child(firebaseUser.getUid());
+
+        databaseReference.setValue(firebaseUser);
+        Log.i(FIREBASE,  "****** Profile Information saved Successfully ******");
     }
 
 
