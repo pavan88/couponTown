@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity
     //
     FirebaseDatabase firebaseDatabase;
     DatabaseReference databaseReference;
-    FirebaseUser firebaseUser;
 
 
     private RecyclerView recyclerView;
@@ -84,10 +83,6 @@ public class MainActivity extends AppCompatActivity
         TextView textView = findViewById(R.id.toolbartitle);
         textView.setText(R.string.app_name);
 
-        //
-        firebaseAuth = FirebaseUtil.firebaseAuth;
-        firebaseUser = FirebaseUtil.firebaseUser;
-        //
 
         CircleImageView circleImageView = findViewById(R.id.logoXmarks);
 
@@ -149,7 +144,7 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
-            FirebaseUtil.firebaseAuth.signOut();
+            FirebaseUtil.signout();
             redirecttoLogin();
         }
     }
@@ -241,22 +236,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void checkAuthState() {
-
+        final FirebaseUser firebaseUser = FirebaseUtil.firebaseUser();
         Log.i(FIREBASE, "Checking Authentication State");
 
         if (firebaseUser == null) {
             redirecttoLogin();
         } else if (!firebaseUser.isEmailVerified() && firebaseUser.getEmail() != null) {
-            firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Log.i(FIREBASE, "User need to verify email=>" + firebaseUser.getEmail());
-                        Toast.makeText(MainActivity.this, "Please verify email to login", Toast.LENGTH_LONG).show();
-                        redirecttoLogin();
-                    }
-                }
-            });
+            FirebaseUtil.sendVerificationEmail(this);
+            redirecttoLogin();
         } else {
             Log.i(FIREBASE, "Verified User=>" + firebaseUser.getEmail());
             checkuserexists();
@@ -267,27 +254,29 @@ public class MainActivity extends AppCompatActivity
     private void checkuserexists() {
 
         Log.i(FIREBASE, "Reading the data from Database");
+        final FirebaseUser firebaseUser = FirebaseUtil.firebaseUser();
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("profile");
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("user");
 
-        Query query = databaseReference.orderByKey().equalTo(firebaseUser.getUid());
+        Query query = databaseReference.equalTo(firebaseUser.getUid());
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.hasChildren()) {
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        Log.i(FIREBASE, snapshot.getKey());
-                        String email = (String) snapshot.child("email").getValue();
-                        String uid = (String) snapshot.child("uid").getValue();
+                Log.i(FIREBASE, String.valueOf(dataSnapshot.getChildrenCount()));
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Log.i(FIREBASE, snapshot.getKey());
+                    String email = (String) snapshot.child("email").getValue();
+                    String uid = (String) snapshot.child("uid").getValue();
 
-                        if (!(email.equalsIgnoreCase(firebaseUser.getEmail()) && uid.equalsIgnoreCase(firebaseUser.getUid()))) {
-                            // User is not existing in DB , So add an entry in firebase realtime db
-                            createnewuserinfoindb();
-                        }
+                    if (!(email.equalsIgnoreCase(firebaseUser.getEmail()) && uid.equalsIgnoreCase(firebaseUser.getUid()))) {
+                        // User is not existing in DB , So add an entry in firebase realtime db
+                        FirebaseUtil.addnewuser(firebaseUser);
                     }
-                } else {
-                    createnewuserinfoindb();
                 }
+                if(!dataSnapshot.hasChildren()){
+                    FirebaseUtil.addnewuser(firebaseUser);
+                }
+
             }
 
             @Override
@@ -295,18 +284,6 @@ public class MainActivity extends AppCompatActivity
                 Log.getStackTraceString(databaseError.toException());
             }
         });
-    }
-
-
-    private void createnewuserinfoindb() {
-        Log.i(FIREBASE, "Registering the user for the firsttime in firebase");
-        //create an entry in db for the first time
-
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance()
-                .getReference("profile").child(firebaseUser.getUid());
-
-        databaseReference.setValue(firebaseUser);
-        Log.i(FIREBASE,  "****** Profile Information saved Successfully ******");
     }
 
 
