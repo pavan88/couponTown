@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "231574897356-u0aed5mc7e2boqgnv4sm5jsoccdu7f9i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.coupontown",
+            "certificate_hash": "600c568e01dce6a6673e093b059e0414367d54d2"
+          }
+        },
+        {
           "client_id": "231574897356-ugldd9i102ptsogdg4r2453pcektcr6g.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

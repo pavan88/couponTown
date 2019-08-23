@@ -9,7 +9,6 @@ import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,18 +21,15 @@ import androidx.viewpager.widget.ViewPager;
 import com.coupontown.adapter.HomeRecyclerViewAdapter;
 import com.coupontown.adapter.ViewPagerSlideAdapter;
 import com.coupontown.model.ItemOfferModel;
+import com.coupontown.model.UserProfile;
 import com.coupontown.utility.DataGenerator;
 import com.coupontown.utility.FirebaseUtil;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -53,18 +49,11 @@ public class MainActivity extends AppCompatActivity
 
     private static final String FIREBASE = MainActivity.class.getName() + ":Firebase";
 
-    //FireBase
-    FirebaseAuth firebaseAuth;
-    FirebaseAuth.AuthStateListener authStateListener;
-
-    //
-    FirebaseDatabase firebaseDatabase;
-    DatabaseReference databaseReference;
-
-
     private RecyclerView recyclerView;
     private HomeRecyclerViewAdapter recyclerViewAdapter;
     private List<ItemOfferModel> arrayList = new ArrayList<>();
+
+    private UserProfile userProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +98,8 @@ public class MainActivity extends AppCompatActivity
         initAdapter();
         runAnimationAgain();
 
+        userProfile = FirebaseUtil.getUserProfile();
+
 
         //DrawerLayout
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -126,8 +117,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-
-
     }
 
     @Override
@@ -179,6 +168,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.profile) {
+            Intent profileIntent = new Intent(this, ProfileActivity.class);
+
+            profileIntent.putExtra("userProfile", userProfile);
             redirecttoProfile();
         }
 
@@ -231,8 +223,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void redirecttoProfile() {
-        Intent loginIntent = new Intent(this, ProfileActivity.class);
-        startActivity(loginIntent);
+        Intent profileIntent = new Intent(this, ProfileActivity.class);
+        profileIntent.putExtra("userProfile", FirebaseUtil.getUserProfile());
+        startActivity(profileIntent);
     }
 
     private void checkAuthState() {
@@ -256,27 +249,18 @@ public class MainActivity extends AppCompatActivity
         Log.i(FIREBASE, "Reading the data from Database");
         final FirebaseUser firebaseUser = FirebaseUtil.firebaseUser();
 
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("user");
+        //This logic should change now
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("userProfile").child(firebaseUser.getUid());
 
-        Query query = databaseReference.equalTo(firebaseUser.getUid());
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.i(FIREBASE, String.valueOf(dataSnapshot.getChildrenCount()));
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Log.i(FIREBASE, snapshot.getKey());
-                    String email = (String) snapshot.child("email").getValue();
-                    String uid = (String) snapshot.child("uid").getValue();
-
-                    if (!(email.equalsIgnoreCase(firebaseUser.getEmail()) && uid.equalsIgnoreCase(firebaseUser.getUid()))) {
-                        // User is not existing in DB , So add an entry in firebase realtime db
-                        FirebaseUtil.addnewuser(firebaseUser);
-                    }
+                if (!dataSnapshot.hasChildren()) {
+                    Log.i(FIREBASE, dataSnapshot.getKey());
+                    Log.i(FIREBASE, dataSnapshot.toString());
+                    userProfile = FirebaseUtil.addnewuser(firebaseUser);
                 }
-                if(!dataSnapshot.hasChildren()){
-                    FirebaseUtil.addnewuser(firebaseUser);
-                }
-
             }
 
             @Override

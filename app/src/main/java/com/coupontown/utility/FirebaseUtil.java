@@ -3,13 +3,9 @@ package com.coupontown.utility;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
-import com.coupontown.model.User;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.coupontown.model.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthSettings;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
@@ -18,29 +14,30 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Date;
+
 public class FirebaseUtil {
 
-
-    public static FirebaseDatabase firebaseDatabase = FirebaseDatabase.getInstance();
-
     private static final String FIREBASE = FirebaseUtil.class.getName();
+    private static UserProfile userProfile;
 
-    public static boolean addnewuser(FirebaseUser firebaseUser) {
-        //check user exists.
-        //TODO need to optimise the userexists
-        if (firebaseUser != null) {
-            Log.i(FIREBASE, "Registering the user for the firsttime in firebase");
-            //create an entry in db for the first time
+    public static UserProfile addnewuser(FirebaseUser firebaseUser) {
 
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance()
-                    .getReference("user").child(firebaseUser.getUid());
+        Log.i(FIREBASE, "Registering the user for the firsttime in firebase");
+        //create an entry in db for the first time
 
-            User user = new User();
-            user.setFirebaseUser(firebaseUser);
-            databaseReference.setValue(user);
-            Log.i(FIREBASE, "****** Profile Information saved Successfully ******");
-        }
-        return false;
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+                .getReference("userProfile").child(firebaseUser.getUid());
+
+        String url = "https://firebasestorage.googleapis.com/v0/b/coupontown-bf56f.appspot.com/o/images%2FCzVj7VbDrJaNWIoaCAKf53RIodj2?alt=media&token=ccaf3eb5-08c1-465e-8d16-ff4b64a2a333";
+
+
+        UserProfile userProfile = mapFirebaseuser(firebaseUser);
+        userProfile.setPicurlstr(url);
+        databaseReference.setValue(userProfile);
+        Log.i(FIREBASE, "****** Profile Information saved Successfully ******");
+        return userProfile;
     }
 
     public static boolean deleteuser(String email) {
@@ -48,74 +45,31 @@ public class FirebaseUtil {
         return false;
     }
 
-    public static void updateuser(String fullname, String email, String phone, Uri profilepicurl) {
+    public static void updateuser(String fullname, String email, String phone, String profilepicurl) {
+
+        //Now FirebaseUser object is updated, pending is DB
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (!userexists(firebaseUser)) {
-            UserProfileChangeRequest userProfileChangeRequest = profilebuilder(fullname, profilepicurl);
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+                .getReference("userProfile").child(firebaseUser.getUid());
 
-            firebaseUser.updateProfile(userProfileChangeRequest).addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        Log.i("up", "Username and Profile PIC update successfully");
-                    } else {
-                        Log.i("up", Log.getStackTraceString(task.getException()));
-                    }
-                }
-            });
-
-
-            //Current email and new email is not same
-            if (email != null && !firebaseUser.getEmail().equalsIgnoreCase(email)) {
-
-                firebaseUser.updateEmail(email).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            sendVerificationEmail(null);
-                            Log.i("upemail", "Email update successfully");
-                        } else {
-                            Log.i("upemail", Log.getStackTraceString(task.getException()));
-                        }
-                    }
-                });
-            }
-
-
+        if (profilepicurl != null) {
+            databaseReference.child("picurlstr").setValue(profilepicurl);
         }
+
+        if (!fullname.equalsIgnoreCase("")) {
+            databaseReference.child("full_name").setValue(fullname);
+        }
+
+        if (!phone.equalsIgnoreCase("")) {
+            databaseReference.child("phonenumber").setValue(phone);
+        }
+
+       /* User user = new User();
+        user.setFirebaseUser(firebaseUser);
+        databaseReference.setValue(user);*/
+
+
         //check user exists.
-    }
-
-    private static boolean userexists(@NonNull FirebaseUser firebaseUser) {
-        final boolean exists = false;
-        FirebaseDatabase.getInstance().getReference("users").
-                orderByKey().equalTo(firebaseUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                System.out.println(dataSnapshot.toString());
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-        return false;
-    }
-
-
-    private static UserProfileChangeRequest profilebuilder(String name, Uri uri) {
-
-        UserProfileChangeRequest.Builder userProfileChangeRequest = new UserProfileChangeRequest
-                .Builder();
-        if (name != null) {
-            userProfileChangeRequest.setDisplayName(name);
-        }
-        if (uri != null) {
-            userProfileChangeRequest.setPhotoUri(uri);
-        }
-        return userProfileChangeRequest.build();
-
     }
 
     public static void sendVerificationEmail(final Context context) {
@@ -123,18 +77,7 @@ public class FirebaseUtil {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         if (firebaseUser != null) {
-            firebaseUser.sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    if (task.isSuccessful()) {
-                        //Toast.makeText(context, "Sent Email Verification Link!", Toast.LENGTH_LONG).show();
-                        Log.i(FIREBASE, "sendVerificationEmail: onComplete =>" + task.isSuccessful());
-                    } else {
-                       // Toast.makeText(context, "Failed::Sent Email Verification Email!", Toast.LENGTH_LONG).show();
-                        Log.i(FIREBASE, "failed sendVerificationEmail: onComplete =>" + task.isSuccessful());
-                    }
-                }
-            });
+            firebaseUser.sendEmailVerification();
         }
     }
 
@@ -143,9 +86,52 @@ public class FirebaseUtil {
     }
 
     public static FirebaseUser firebaseUser() {
-
         return FirebaseAuth.getInstance().getCurrentUser();
-
     }
 
+    public static UserProfile mapFirebaseuser(FirebaseUser firebaseUser) {
+
+        UserProfile userProfile = new UserProfile();
+
+
+        userProfile.setFull_name(firebaseUser.getDisplayName());
+
+        userProfile.setPhonenumber(firebaseUser.getPhoneNumber());
+        userProfile.setEmail(firebaseUser.getEmail());
+        if (firebaseUser.getPhotoUrl() != null) {
+            userProfile.setPicurlstr(firebaseUser.getPhotoUrl().toString());
+        }
+        userProfile.setProvider(firebaseUser.getProviderData().get(0).getProviderId());
+        userProfile.setLastLogin(new Date());
+        userProfile.setUid(firebaseUser.getUid());
+        userProfile.setVerified(firebaseUser.isEmailVerified());
+
+        return userProfile;
+    }
+
+    public static UserProfile getUserProfile(){
+        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+                .getReference("userProfile").child(firebaseUser.getUid());
+
+       ValueEventListener valueEventListener =  new ValueEventListener() {
+           @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                userProfile = dataSnapshot.getValue(UserProfile.class);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+
+        databaseReference.addValueEventListener(valueEventListener);
+
+        return userProfile;
+    }
+
+    public static void updateuser(UserProfile finalProfile) {
+        updateuser(finalProfile.getFull_name(), finalProfile.getEmail(), finalProfile.getPhonenumber(), finalProfile.getPicurlstr());
+    }
 }
