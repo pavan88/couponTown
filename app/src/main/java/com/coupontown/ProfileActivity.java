@@ -67,11 +67,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
 
         Intent intent = getIntent();
-
-
         userProfile = intent.getParcelableExtra("userProfile");
-
-        System.out.println("Userprofile=>" + userProfile.toString());
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -109,7 +105,6 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
             String name = fullname.getText().toString();
             String phone = number.getText().toString();
-            Uri profileuri = selectedImageUri;
             UserProfile.UserProfileBuilder userProfileBuilder = new UserProfile.UserProfileBuilder(email.getText().toString());
             UserProfile profile = null;
 

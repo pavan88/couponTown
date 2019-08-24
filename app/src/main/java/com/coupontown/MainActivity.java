@@ -1,6 +1,7 @@
 package com.coupontown;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -24,6 +25,7 @@ import com.coupontown.model.ItemOfferModel;
 import com.coupontown.model.UserProfile;
 import com.coupontown.utility.DataGenerator;
 import com.coupontown.utility.FirebaseUtil;
+import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -31,12 +33,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.ListResult;
+import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -54,13 +60,18 @@ public class MainActivity extends AppCompatActivity
     private List<ItemOfferModel> arrayList = new ArrayList<>();
 
     private UserProfile userProfile;
+    List<Uri> viewslist;
+
+    ViewPagerSlideAdapter viewPagerSlideAdapter;
+    ViewPager viewPager;
+    CircleImageView circleImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-
+        userProfile = FirebaseUtil.getUserProfile();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -73,10 +84,37 @@ public class MainActivity extends AppCompatActivity
         textView.setText(R.string.app_name);
 
 
-        CircleImageView circleImageView = findViewById(R.id.logoXmarks);
+        final StorageReference imagesRef = FirebaseStorage.getInstance().getReference().child("viewpager");
+        viewslist = new ArrayList<>();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ListResult listResult = Tasks.await(imagesRef.listAll());
+                    for (StorageReference child : listResult.getItems()) {
+                        Uri uri = Tasks.await(child.getDownloadUrl());
+                        viewslist.add(uri);
+                    }
+                    viewPager = findViewById(R.id.viewpager);
+                    viewPagerSlideAdapter = new ViewPagerSlideAdapter(MainActivity.this, viewslist);
+                } catch (ExecutionException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        t.start();
 
-        Picasso.with(this).load(DataGenerator.android_image_urls[0])
-                .into(circleImageView);
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        viewPager.setAdapter(viewPagerSlideAdapter);
+
+        circleImageView = findViewById(R.id.logoXmarks);
 
         circleImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -86,20 +124,11 @@ public class MainActivity extends AppCompatActivity
         });
 
 
-        //VIew Page Image Slider
-        ViewPager viewPager = findViewById(R.id.viewpager);
-        ViewPagerSlideAdapter viewPagerSlideAdapter = new ViewPagerSlideAdapter(this);
-        viewPager.setAdapter(viewPagerSlideAdapter);
-
-
         //Recycler View
         recyclerView = findViewById(R.id.recyclerView);
         populateData();
         initAdapter();
         runAnimationAgain();
-
-        userProfile = FirebaseUtil.getUserProfile();
-
 
         //DrawerLayout
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -116,6 +145,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStart() {
+        //VIew Page Image Slider
+        if (userProfile != null) {
+            Picasso.with(this).load(userProfile.getPicurlstr()).into(circleImageView);
+        } else {
+            Picasso.with(this).load(DataGenerator.android_image_urls[0])
+                    .into(circleImageView);
+        }
+
+
         super.onStart();
     }
 
@@ -168,9 +206,6 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.profile) {
-            Intent profileIntent = new Intent(this, ProfileActivity.class);
-
-            profileIntent.putExtra("userProfile", userProfile);
             redirecttoProfile();
         }
 
@@ -250,7 +285,8 @@ public class MainActivity extends AppCompatActivity
         final FirebaseUser firebaseUser = FirebaseUtil.firebaseUser();
 
         //This logic should change now
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("userProfile").child(firebaseUser.getUid());
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+                .getReference("userProfile").child(firebaseUser.getUid());
 
 
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -269,6 +305,4 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-
-
 }
