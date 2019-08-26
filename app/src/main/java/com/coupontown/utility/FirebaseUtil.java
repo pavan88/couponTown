@@ -26,7 +26,6 @@ public class FirebaseUtil {
         Log.i(FIREBASE, "Registering the user for the firsttime in firebase");
         //create an entry in db for the first time
 
-
         DatabaseReference databaseReference = FirebaseDatabase.getInstance()
                 .getReference("userProfile").child(firebaseUser.getUid());
 

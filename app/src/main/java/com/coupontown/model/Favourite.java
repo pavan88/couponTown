@@ -9,7 +9,6 @@ public class Favourite implements Parcelable {
 
     List<ItemOfferModel> itemOfferModels;
 
-
     @Override
     public int describeContents() {
         return 0;
@@ -21,6 +20,10 @@ public class Favourite implements Parcelable {
     }
 
     public Favourite() {
+    }
+
+    public Favourite(List<ItemOfferModel> itemOfferModels){
+        this.itemOfferModels = itemOfferModels;
     }
 
     protected Favourite(Parcel in) {

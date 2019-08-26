@@ -131,7 +131,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
                 boolean emailexists;
                 emailexists = task.getResult().getSignInMethods().isEmpty();
-                AuthCredential credential = EmailAuthProvider.getCredential(emailStr, "password1234");
                 if (emailexists) {
                     registeruser(emailStr, passwordStr);
                     spinner.setVisibility(View.GONE);
@@ -211,7 +210,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void hidekeypad() {
         InputMethodManager inputManager = (InputMethodManager)
                 getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        inputManager.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     private void setupFirebaseAuth() {

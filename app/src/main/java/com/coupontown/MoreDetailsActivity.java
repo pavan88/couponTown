@@ -53,12 +53,7 @@ public class MoreDetailsActivity extends AppCompatActivity implements View.OnCli
         TextView category = itemrow.findViewById(R.id.tv_cat);
         category.setText(itemdetails.getCategory());
 
-        CircleImageView circleImageView = itemrow.findViewById(R.id.item_id);
-        circleImageView.setImageURI(itemdetails.getItem_img());
 
-        Picasso.with(this).load(itemdetails.getItem_img())
-                .resize(75, 75)
-                .into(circleImageView);
 
         TextView desc = itemrow.findViewById(R.id.tv_item_desc);
         desc.setVisibility(View.INVISIBLE);

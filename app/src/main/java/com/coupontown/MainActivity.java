@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 import com.coupontown.adapter.HomeRecyclerViewAdapter;
 import com.coupontown.adapter.ViewPagerSlideAdapter;
+import com.coupontown.model.Favourite;
 import com.coupontown.model.ItemOfferModel;
 import com.coupontown.model.UserProfile;
 import com.coupontown.utility.DataGenerator;
@@ -36,12 +37,13 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.ListResult;
 import com.google.firebase.storage.StorageReference;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.squareup.picasso.Picasso;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends AppCompatActivity
@@ -128,7 +130,10 @@ public class MainActivity extends AppCompatActivity
         recyclerView = findViewById(R.id.recyclerView);
         populateData();
         initAdapter();
-        runAnimationAgain();
+        if (recyclerViewAdapter != null) {
+            runAnimationAgain();
+        }
+
 
         //DrawerLayout
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -146,6 +151,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         //VIew Page Image Slider
+        //getWindow().getDecorView().findViewById(R.id.logoXmarks).invalidate();
         if (userProfile != null) {
             Picasso.with(this).load(userProfile.getPicurlstr()).into(circleImageView);
         } else {
@@ -219,8 +225,47 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void initAdapter() {
-        recyclerViewAdapter = new HomeRecyclerViewAdapter(this, arrayList);
-        recyclerView.setAdapter(recyclerViewAdapter);
+        String uid = FirebaseUtil.firebaseUser().getUid();
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("favorites").child(uid);
+
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                List<Map> favorites = (List<Map>) dataSnapshot.getValue();
+                List<ItemOfferModel> itemOfferModels = new ArrayList<>();
+                Gson gson = new Gson();
+                for(Map itemOfferModelMap: favorites){
+                    JsonElement jsonElement = gson.toJsonTree(itemOfferModelMap);
+                    ItemOfferModel itemOfferModel = gson.fromJson(jsonElement, ItemOfferModel.class);
+                    itemOfferModel.setFav(true);
+                    itemOfferModels.add(itemOfferModel);
+                }
+
+                if (favorites == null || favorites.size() == 0) {
+                    recyclerViewAdapter = new HomeRecyclerViewAdapter(MainActivity.this, arrayList);
+                    recyclerView.setAdapter(recyclerViewAdapter);
+                } else {
+
+
+                    //  Favourite favourite  =new Favourite()
+                    Set<ItemOfferModel> set = new LinkedHashSet<>(itemOfferModels);
+                    set.addAll(arrayList);
+                    List<ItemOfferModel> combinedList = new ArrayList<>(set);
+                    System.out.println("Final List:=>" + combinedList);
+
+                    recyclerViewAdapter = new HomeRecyclerViewAdapter(MainActivity.this, combinedList);
+                    recyclerView.setAdapter(recyclerViewAdapter);
+                }
+                // recyclerView.setAdapter(recyclerViewAdapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        //  recyclerViewAdapter = new HomeRecyclerViewAdapter(this, arrayList);
+        //recyclerView.setAdapter(recyclerViewAdapter);
     }
 
     private void runAnimationAgain() {

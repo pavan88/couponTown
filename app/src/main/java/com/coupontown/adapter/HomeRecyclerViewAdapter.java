@@ -16,8 +16,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.coupontown.MoreDetailsActivity;
 import com.coupontown.R;
+import com.coupontown.model.Favourite;
 import com.coupontown.model.ItemOfferModel;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.like.LikeButton;
+import com.like.OnLikeListener;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -31,13 +36,25 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
     private Context context;
 
+    private List<ItemOfferModel> favList;
+
     private static final String TAG_HOMEACTIVITY = HomeRecyclerViewAdapter.class.getName();
+
+    private DatabaseReference mFirebaseDatabase;
 
 
     public HomeRecyclerViewAdapter(Context context, List<ItemOfferModel> itemList) {
         this.itemList = itemList;
         this.mFilteredList = itemList;
         this.context = context;
+    }
+
+    public HomeRecyclerViewAdapter(Context context, List<ItemOfferModel> itemList, Favourite favList) {
+        this.favList = favList.getItemOfferModels();
+        this.itemList = itemList;
+        this.mFilteredList = itemList;
+        this.context = context;
+
     }
 
 
@@ -57,10 +74,45 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
         viewHolder.status.setText(mFilteredList.get(position).getStatus());
 
-        Picasso.with(context).load(itemList.get(position)
-                .getItem_img())
-                .resize(75, 75)
-                .into(viewHolder.circleImageView);
+        mFirebaseDatabase = FirebaseDatabase.getInstance().getReference("favorites").
+                child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+        ItemOfferModel itemOfferModel = mFilteredList.get(position);
+            if (itemOfferModel.isFav()) {
+            // itemOfferModel.setFav(Boolean.TRUE);
+            viewHolder.likeButton.setLiked(true);
+        }
+
+        viewHolder.likeButton.setOnLikeListener(new OnLikeListener() {
+            @Override
+            public void liked(LikeButton likeButton) {
+                if (favList == null) {
+                    favList = new ArrayList<>();
+                }
+
+                ItemOfferModel itemOfferModel = mFilteredList.get(position);
+
+                itemOfferModel.setFav(true);
+                favList.add(itemOfferModel);
+                mFirebaseDatabase.setValue(favList);
+            }
+
+            @Override
+            public void unLiked(LikeButton likeButton) {
+                ItemOfferModel itemOfferModel = mFilteredList.get(position);
+                Log.i("UnLiked ::==>", likeButton.toString());
+                itemOfferModel.setFav(false);
+
+                if (favList != null && favList.size() > 0) {
+                    favList.remove(itemOfferModel);
+                }
+                //TODO need to delete respective index for performance and optimization
+                // databaseReference.child("favorites").removeValue();
+                System.out.println("My FAv List in unLiked " + favList);
+                mFirebaseDatabase.setValue(favList);
+            }
+        });
+
 
         viewHolder.sharebutton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,13 +141,10 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
                 String charString = constraint.toString();
 
                 if (charString.isEmpty()) {
-
                     mFilteredList = itemList;
                 } else {
 
                     ArrayList<ItemOfferModel> filteredList = new ArrayList<>();
-
-
                     for (ItemOfferModel itemOfferModel : mFilteredList) {
                         if (itemOfferModel.getName().toLowerCase().contains(charString) ||
                                 itemOfferModel.getCategory().toLowerCase().contains(charString)) {

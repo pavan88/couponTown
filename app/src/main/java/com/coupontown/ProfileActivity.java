@@ -127,7 +127,7 @@ public class ProfileActivity extends AppCompatActivity implements View.OnClickLi
 
                 progressDialog.setTitle("Uploading...");
                 progressDialog.show();
-               final String uid =  FirebaseAuth.getInstance().getCurrentUser().getUid();
+                final String uid =  FirebaseAuth.getInstance().getCurrentUser().getUid();
                 final StorageReference ref = storageReference.child("images/" + uid);
                 StorageMetadata storageMetadata = new StorageMetadata.Builder()
                         .setContentType("image/jpeg")

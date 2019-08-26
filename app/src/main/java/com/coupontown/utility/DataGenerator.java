@@ -43,7 +43,7 @@ public class DataGenerator {
         itemOfferModel.setName("FlopKart");
         itemOfferModel.setMoreDetails(moreDetails());
         itemOfferModel.setStatus("New!!");
-        itemOfferModel.setItem_img(Uri.parse(android_image_urls[0]));
+       // itemOfferModel.setItem_img(Uri.parse(android_image_urls[0]));
 
         return itemOfferModel;
     }
@@ -53,7 +53,7 @@ public class DataGenerator {
         itemOfferModel.setDescription("Upto Rs 650 offer on Fasttrack railways in UK..");
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
-        itemOfferModel.setItem_img(Uri.parse(android_image_urls[1]));
+      //  itemOfferModel.setItem_img(Uri.parse(android_image_urls[1]));
         itemOfferModel.setStatus("Exipring Soon!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
@@ -64,7 +64,7 @@ public class DataGenerator {
         itemOfferModel.setDescription("Upto Rs 650 offer on Fasttrack railways in UK..");
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
-        itemOfferModel.setItem_img(Uri.parse(android_image_urls[2]));
+     //   itemOfferModel.setItem_img(Uri.parse(android_image_urls[2]));
         itemOfferModel.setStatus("Expired!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
@@ -75,7 +75,7 @@ public class DataGenerator {
         itemOfferModel.setDescription("Upto Rs 650 offer on Fasttrack railways in UK..");
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
-        itemOfferModel.setItem_img(Uri.parse(android_image_urls[3]));
+     //   itemOfferModel.setItem_img(Uri.parse(android_image_urls[3]));
         itemOfferModel.setStatus("Closed!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
