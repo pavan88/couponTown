@@ -234,18 +234,18 @@ public class MainActivity extends AppCompatActivity
                 List<Map> favorites = (List<Map>) dataSnapshot.getValue();
                 List<ItemOfferModel> itemOfferModels = new ArrayList<>();
                 Gson gson = new Gson();
-                for(Map itemOfferModelMap: favorites){
-                    JsonElement jsonElement = gson.toJsonTree(itemOfferModelMap);
-                    ItemOfferModel itemOfferModel = gson.fromJson(jsonElement, ItemOfferModel.class);
-                    itemOfferModel.setFav(true);
-                    itemOfferModels.add(itemOfferModel);
-                }
 
                 if (favorites == null || favorites.size() == 0) {
                     recyclerViewAdapter = new HomeRecyclerViewAdapter(MainActivity.this, arrayList);
                     recyclerView.setAdapter(recyclerViewAdapter);
                 } else {
 
+                    for(Map itemOfferModelMap: favorites){
+                        JsonElement jsonElement = gson.toJsonTree(itemOfferModelMap);
+                        ItemOfferModel itemOfferModel = gson.fromJson(jsonElement, ItemOfferModel.class);
+                        itemOfferModel.setFav(true);
+                        itemOfferModels.add(itemOfferModel);
+                    }
 
                     //  Favourite favourite  =new Favourite()
                     Set<ItemOfferModel> set = new LinkedHashSet<>(itemOfferModels);
@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity
                     List<ItemOfferModel> combinedList = new ArrayList<>(set);
                     System.out.println("Final List:=>" + combinedList);
 
-                    recyclerViewAdapter = new HomeRecyclerViewAdapter(MainActivity.this, combinedList);
+                    recyclerViewAdapter = new HomeRecyclerViewAdapter(MainActivity.this, combinedList, itemOfferModels);
                     recyclerView.setAdapter(recyclerViewAdapter);
                 }
                 // recyclerView.setAdapter(recyclerViewAdapter);

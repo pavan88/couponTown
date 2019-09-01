@@ -21,13 +21,13 @@ public class UserProfile implements Parcelable {
 
     private String provider;
 
-    private boolean isAuthenticated;
+    private Boolean isAuthenticated;
 
-    private boolean isVerified;
+    private Boolean isVerified;
 
     private String lastloggedin;
 
-    private boolean multipleAccount;
+    private Boolean multipleAccount;
 
     private String picurlstr;
 

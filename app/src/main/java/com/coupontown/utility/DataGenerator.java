@@ -26,6 +26,7 @@ public class DataGenerator {
     public static List<ItemOfferModel> generateData() {
 
         List<ItemOfferModel> data = new ArrayList<>();
+        data.add(generateMakeMyTrip());
         data.add(generatePayTime1());
         data.add(generatePayTime());
         data.add(generateflopkartoffer());
@@ -36,6 +37,24 @@ public class DataGenerator {
 
     }
 
+    private static ItemOfferModel generateMakeMyTrip() {
+        ItemOfferModel itemOfferModel = new ItemOfferModel();
+        itemOfferModel.setCategory("Travel");
+        itemOfferModel.setDescription("Exclusive: Upto to Rs. 800 Instant Discount on Domestic Flight");
+        itemOfferModel.setName("MakeMyTrip");
+        MoreDetails moreDetails = new MoreDetails();
+        StringBuffer stringBuffer = new StringBuffer();
+        stringBuffer.append("• Get upto Rs 800 instant discount on Domestic flights of minimum Rs.3000\n");
+        stringBuffer.append("• Offer is valid only on MakeMyTrip App (Android / iOS\n");
+        stringBuffer.append("• Offer is not valid payments made through wallet, COD, Paypal Account and EMI\n");
+        stringBuffer.append("• Use the coupon code to avail the offer\n");
+
+        moreDetails.setDetail_desc(stringBuffer.toString());
+        moreDetails.setComment("Nice , Really useful");
+        itemOfferModel.setMoreDetails(moreDetails);
+        return itemOfferModel;
+    }
+
     private static ItemOfferModel generateflopkartoffer() {
         ItemOfferModel itemOfferModel = new ItemOfferModel();
         itemOfferModel.setDescription("Big Shopping Days: Upto to 80% Off on Mobiles, Electronics, Furniture & more..");
@@ -43,7 +62,7 @@ public class DataGenerator {
         itemOfferModel.setName("FlopKart");
         itemOfferModel.setMoreDetails(moreDetails());
         itemOfferModel.setStatus("New!!");
-       // itemOfferModel.setItem_img(Uri.parse(android_image_urls[0]));
+        // itemOfferModel.setItem_img(Uri.parse(android_image_urls[0]));
 
         return itemOfferModel;
     }
@@ -53,7 +72,7 @@ public class DataGenerator {
         itemOfferModel.setDescription("Upto Rs 650 offer on Fasttrack railways in UK..");
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
-      //  itemOfferModel.setItem_img(Uri.parse(android_image_urls[1]));
+        //  itemOfferModel.setItem_img(Uri.parse(android_image_urls[1]));
         itemOfferModel.setStatus("Exipring Soon!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
@@ -64,7 +83,7 @@ public class DataGenerator {
         itemOfferModel.setDescription("Upto Rs 650 offer on Fasttrack railways in UK..");
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
-     //   itemOfferModel.setItem_img(Uri.parse(android_image_urls[2]));
+        //   itemOfferModel.setItem_img(Uri.parse(android_image_urls[2]));
         itemOfferModel.setStatus("Expired!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
@@ -75,7 +94,7 @@ public class DataGenerator {
         itemOfferModel.setDescription("Upto Rs 650 offer on Fasttrack railways in UK..");
         itemOfferModel.setCategory("Fashion");
         itemOfferModel.setName("Paytime");
-     //   itemOfferModel.setItem_img(Uri.parse(android_image_urls[3]));
+        //   itemOfferModel.setItem_img(Uri.parse(android_image_urls[3]));
         itemOfferModel.setStatus("Closed!!");
         itemOfferModel.setMoreDetails(moreDetails());
         return itemOfferModel;
@@ -91,6 +110,6 @@ public class DataGenerator {
         stringBuffer.append("3. This Offer is valid till the stock lasts \n");
         stringBuffer.append("4. CouponTown is not responsible for misuse of the offer ");
         moreDetails.setDetail_desc(stringBuffer.toString());
-        return  moreDetails;
+        return moreDetails;
     }
 }

@@ -23,6 +23,10 @@ public class ItemOfferModel implements Parcelable {
 
     private boolean isFav;
 
+    private Integer thumpsup;
+
+    private Integer thumpsdown;
+
 
     public String getCategory() {
         return category;
@@ -56,7 +60,6 @@ public class ItemOfferModel implements Parcelable {
         this.description = description;
     }
 
-
     public String getStatus() {
         return status;
     }
@@ -81,6 +84,21 @@ public class ItemOfferModel implements Parcelable {
         isFav = fav;
     }
 
+    public Integer getThumpsup() {
+        return thumpsup;
+    }
+
+    public void setThumpsup(Integer thumpsup) {
+        this.thumpsup = thumpsup;
+    }
+
+    public Integer getThumpsdown() {
+        return thumpsdown;
+    }
+
+    public void setThumpsdown(Integer thumpsdown) {
+        this.thumpsdown = thumpsdown;
+    }
 
     @Override
     public int describeContents() {
@@ -93,10 +111,11 @@ public class ItemOfferModel implements Parcelable {
         dest.writeString(this.name);
         dest.writeString(this.logo);
         dest.writeString(this.description);
-        //dest.writeParcelable(this.item_img, flags);
         dest.writeString(this.status);
         dest.writeParcelable(this.moreDetails, flags);
         dest.writeByte(this.isFav ? (byte) 1 : (byte) 0);
+        dest.writeValue(this.thumpsup);
+        dest.writeValue(this.thumpsdown);
     }
 
     public ItemOfferModel() {
@@ -107,10 +126,11 @@ public class ItemOfferModel implements Parcelable {
         this.name = in.readString();
         this.logo = in.readString();
         this.description = in.readString();
-        //  this.item_img = in.readParcelable(Uri.class.getClassLoader());
         this.status = in.readString();
         this.moreDetails = in.readParcelable(MoreDetails.class.getClassLoader());
         this.isFav = in.readByte() != 0;
+        this.thumpsup = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.thumpsdown = (Integer) in.readValue(Integer.class.getClassLoader());
     }
 
     public static final Creator<ItemOfferModel> CREATOR = new Creator<ItemOfferModel>() {
@@ -126,19 +146,17 @@ public class ItemOfferModel implements Parcelable {
     };
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ItemOfferModel that = (ItemOfferModel) o;
-        return isFav == that.isFav &&
-                category.equals(that.category) &&
-                name.equals(that.name) &&
-                description.equals(that.description) &&
-                status.equals(that.status);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(category, name,  description, status, isFav);
+    public String toString() {
+        return "ItemOfferModel{" +
+                "category='" + category + '\'' +
+                ", name='" + name + '\'' +
+                ", logo='" + logo + '\'' +
+                ", description='" + description + '\'' +
+                ", status='" + status + '\'' +
+                ", moreDetails=" + moreDetails +
+                ", isFav=" + isFav +
+                ", thumpsup=" + thumpsup +
+                ", thumpsdown=" + thumpsdown +
+                '}';
     }
 }

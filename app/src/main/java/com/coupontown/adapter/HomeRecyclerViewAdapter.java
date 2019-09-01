@@ -49,8 +49,8 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         this.context = context;
     }
 
-    public HomeRecyclerViewAdapter(Context context, List<ItemOfferModel> itemList, Favourite favList) {
-        this.favList = favList.getItemOfferModels();
+    public HomeRecyclerViewAdapter(Context context, List<ItemOfferModel> itemList, List<ItemOfferModel> favList) {
+        this.favList = favList;
         this.itemList = itemList;
         this.mFilteredList = itemList;
         this.context = context;
@@ -78,9 +78,11 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
                 child(FirebaseAuth.getInstance().getCurrentUser().getUid());
 
         ItemOfferModel itemOfferModel = mFilteredList.get(position);
-            if (itemOfferModel.isFav()) {
+        if (itemOfferModel.isFav()) {
             // itemOfferModel.setFav(Boolean.TRUE);
-            viewHolder.likeButton.setLiked(true);
+            viewHolder.likeButton.setLiked(Boolean.TRUE);
+        } else {
+            viewHolder.likeButton.setLiked(Boolean.FALSE);
         }
 
         viewHolder.likeButton.setOnLikeListener(new OnLikeListener() {
@@ -95,6 +97,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
                 itemOfferModel.setFav(true);
                 favList.add(itemOfferModel);
                 mFirebaseDatabase.setValue(favList);
+
             }
 
             @Override
@@ -102,7 +105,6 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
                 ItemOfferModel itemOfferModel = mFilteredList.get(position);
                 Log.i("UnLiked ::==>", likeButton.toString());
                 itemOfferModel.setFav(false);
-
                 if (favList != null && favList.size() > 0) {
                     favList.remove(itemOfferModel);
                 }

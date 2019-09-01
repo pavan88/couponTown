@@ -113,6 +113,7 @@ public class FirebaseUtil {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance()
                 .getReference("userProfile").child(firebaseUser.getUid());
 
+
        ValueEventListener valueEventListener =  new ValueEventListener() {
            @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

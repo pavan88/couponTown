@@ -12,9 +12,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.coupontown.model.ItemOfferModel;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.like.LikeButton;
 import com.squareup.picasso.Picasso;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -25,6 +29,8 @@ public class MoreDetailsActivity extends AppCompatActivity implements View.OnCli
     private ImageView circleImageView;
     private ImageView sharebutton;
     private LikeButton likeButton;
+    FirebaseDatabase firebaseDatabase;
+    DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,31 +60,28 @@ public class MoreDetailsActivity extends AppCompatActivity implements View.OnCli
         category.setText(itemdetails.getCategory());
 
 
-
         TextView desc = itemrow.findViewById(R.id.tv_item_desc);
         desc.setVisibility(View.INVISIBLE);
 
         TextView textView = findViewById(R.id.moredetails_desc);
         textView.setText(itemdetails.getMoreDetails().getDetail_desc());
 
+
+
         Button button = contentmoredetails.findViewById(R.id.button);
         PackageManager packageManager = this.getPackageManager();
         final Intent intent = packageManager.getLaunchIntentForPackage(itemdetails.getMoreDetails().getAppurl());
-
         button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(intent==null){
-                   Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    intent.setData(Uri.parse("market://details?id=" + "net.one97.paytm"));
-                    MoreDetailsActivity.this.startActivity(intent);
-                }else {
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    MoreDetailsActivity.this.startActivity(intent);
-                }
+            public void onClick(View view) {
+                AlertDialog alertDialog = new AlertDialog.Builder(MoreDetailsActivity.this).create(); //Read Update
+                alertDialog.setTitle("CouponCode");
+                alertDialog.setMessage("1234567899");
+                alertDialog.show();  //<-- See This!
             }
+
         });
+
+
     }
 
 
