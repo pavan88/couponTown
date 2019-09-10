@@ -1,10 +1,13 @@
 package com.coupontown;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import pl.droidsonroids.gif.GifImageView;
 
 public class WelcomeActivity extends AppCompatActivity {
 
@@ -13,13 +16,17 @@ public class WelcomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
 
-        Toolbar toolbar
-                = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Handler handler = new Handler();
+        TextView textView = findViewById(R.id.welcometext);
 
-        handler.postDelayed(new Runnable() {
+        //TODO Need to add delay in displaying
+        textView.setHighlightColor(Color.GREEN);
+        textView.setVisibility(View.VISIBLE);
+
+        GifImageView gifImageView = findViewById(R.id.gifview);
+        gifImageView.postDelayed(new Runnable() {
             @Override
             public void run() {
                 Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
@@ -27,6 +34,5 @@ public class WelcomeActivity extends AppCompatActivity {
                 WelcomeActivity.this.finish();
             }
         }, 2000);
-
     }
 }

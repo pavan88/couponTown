@@ -11,23 +11,23 @@ public class UserProfile implements Parcelable {
 
     private String full_name;
 
+    private String phonenumber;
+
+    private Uri profile_pic;
+
     private String email;
 
     private String uid;
 
-    private Uri profile_pic;
-
-    private String phonenumber;
-
     private String provider;
 
-    private boolean isAuthenticated;
+    private Boolean isAuthenticated;
 
-    private boolean isVerified;
+    private Boolean isVerified;
 
     private String lastloggedin;
 
-    private boolean multipleAccount;
+    private Boolean multipleAccount;
 
     private String picurlstr;
 
@@ -43,6 +43,13 @@ public class UserProfile implements Parcelable {
 
     }
 
+    public UserProfile(UserProfileBuilder userProfileBuilder){
+        this.full_name = userProfileBuilder.full_name;
+        this.phonenumber = userProfileBuilder.phonenumber;
+        this.profile_pic = userProfileBuilder.profile_pic;
+        this.email = userProfileBuilder.email;
+    }
+
     public UserProfile(Parcel in) {
         full_name = in.readString();
         email = in.readString();
@@ -56,6 +63,11 @@ public class UserProfile implements Parcelable {
         multipleAccount = in.readByte() != 0;
         picurlstr = in.readString();
         favorites = in.createStringArrayList();
+    }
+
+    public UserProfile(String full_name, String phonenumber) {
+        this.full_name = full_name;
+        this.phonenumber = phonenumber;
     }
 
     @Override
@@ -230,5 +242,43 @@ public class UserProfile implements Parcelable {
                 ", lastLogin=" + lastLogin +
                 ", favorites=" + favorites +
                 '}';
+    }
+
+
+    public static class UserProfileBuilder{
+
+        private String full_name;
+
+        private String phonenumber;
+
+        private Uri profile_pic;
+
+        private String email;
+
+        public UserProfileBuilder(String email) {
+            this.email = email;
+        }
+
+        public UserProfileBuilder withfullname(String full_name){
+            this.full_name = full_name;
+            return this;
+        }
+
+        public UserProfileBuilder withPhoneNumber(String phoneNumber){
+            this.phonenumber = phoneNumber;
+            return this;
+        }
+
+        public UserProfileBuilder withPicUrl(Uri profile_pic){
+            this.profile_pic = profile_pic;
+            return this;
+        }
+
+        public UserProfile build() {
+
+            return new UserProfile(this);
+        }
+
+
     }
 }

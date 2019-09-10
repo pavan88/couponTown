@@ -1,52 +1,53 @@
 {
   "project_info": {
-    "project_number": "472112656014",
-    "firebase_url": "https://coupontown-8a4fa.firebaseio.com",
-    "project_id": "coupontown-8a4fa",
-    "storage_bucket": "coupontown-8a4fa.appspot.com"
+    "project_number": "231574897356",
+    "firebase_url": "https://coupontown-bf56f.firebaseio.com",
+    "project_id": "coupontown-bf56f",
+    "storage_bucket": "coupontown-bf56f.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:472112656014:android:0d1ca365cd0bf601",
+        "mobilesdk_app_id": "1:231574897356:android:0d1ca365cd0bf601",
         "android_client_info": {
           "package_name": "com.coupontown"
         }
       },
       "oauth_client": [
         {
-          "client_id": "472112656014-rh8tbvi7t4ih10ehlf8uv9gtk0b5tts1.apps.googleusercontent.com",
+          "client_id": "231574897356-u0aed5mc7e2boqgnv4sm5jsoccdu7f9i.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.coupontown",
-            "certificate_hash": "36630b34a6adf958a7b6971b28415573be049375"
+            "certificate_hash": "600c568e01dce6a6673e093b059e0414367d54d2"
           }
         },
         {
-          "client_id": "472112656014-k0da6lq0dm99t7bvki0orrn6090gmu11.apps.googleusercontent.com",
+          "client_id": "231574897356-ugldd9i102ptsogdg4r2453pcektcr6g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.coupontown",
+            "certificate_hash": "ebb114f359a08d74cc1ed755f5b6361f7ac442eb"
+          }
+        },
+        {
+          "client_id": "231574897356-020m659pned9tp85blanh30ra3pllkdt.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBOauXsfqefV1TRzkdPmcD7XcEsO7TPn64"
+          "current_key": "AIzaSyDmb4QXmraqYao64zUkMPMpkJCIHcnEBKs"
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "472112656014-k0da6lq0dm99t7bvki0orrn6090gmu11.apps.googleusercontent.com",
+              "client_id": "231574897356-020m659pned9tp85blanh30ra3pllkdt.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
-        },
-        "ads_service": {
-          "status": 2
         }
       }
     }

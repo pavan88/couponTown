@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/home"
+            android:icon="@drawable/baseline_home_black_18dp"
+            android:title="Home"/>
+
+        <item
+            android:id="@+id/myfav"
+            android:icon="@drawable/ic_heart_18dp"
+            android:title="MyFavorites"/>
+
+        <item
+            android:id="@+id/profile"
+            android:icon="@drawable/baseline_perm_identity_black_18dp"
+            android:title="Profile"/>
+
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/feedback"
+                android:icon="@drawable/ic_feedback_black_36dp"
+                android:title="Send Feedback"/>
+
+            <item
+                android:id="@+id/help"
+                android:icon="@drawable/ic_help_3x"
+                android:title="Help"/>
+            <item
+                android:id="@+id/logout"
+                android:icon="@drawable/ic_logout"
+                android:title="Logout"/>
+        </menu>
+    </item>
+
+</menu>
