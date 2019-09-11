@@ -64,7 +64,6 @@
             android:enabled="false"
             android:fitsSystemWindows="true"
             android:hint="Description"
-            android:inputType="textMultiLine"
             android:paddingEnd="10dp"
             android:textColor="#000000"
             android:textSize="14sp"

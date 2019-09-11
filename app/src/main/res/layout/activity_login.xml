@@ -1,84 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:scrollbarStyle="insideInset"
-    android:clipToPadding="true">
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbarStyle="insideInset"
+            android:clipToPadding="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:context=".LoginActivity">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:context=".LoginActivity">
 
         <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="589dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="8dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/include">
+                android:layout_width="match_parent"
+                android:layout_height="589dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/include">
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/userEmail"
-                style="@style/TextInputLayout">
+                    android:id="@+id/userEmail"
+                    style="@style/TextInputLayout">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingBottom="25dp"
-                    android:hint="Email"
-                    android:inputType="textEmailAddress" />
+                        android:id="@+id/email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="25dp"
+                        android:hint="Email"
+                        android:inputType="textEmailAddress" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/userPassword"
-                android:layout_below="@id/userEmail"
-                app:passwordToggleEnabled="true"
-                style="@style/TextInputLayout">
+                    android:id="@+id/userPassword"
+                    android:layout_below="@id/userEmail"
+                    app:passwordToggleEnabled="true"
+                    style="@style/TextInputLayout">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Password"
-                    android:inputType="textPassword"
-                    android:paddingBottom="25dp" />
+                        android:id="@+id/password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Password"
+                        android:inputType="textPassword"
+                        android:paddingBottom="25dp" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button
-                android:id="@+id/buttonLogin"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/userPassword"
-                android:text="@string/login_button"
-                style="@style/AppTheme.Button" />
+                    android:id="@+id/buttonLogin"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/userPassword"
+                    android:text="@string/login_button"
+                    style="@style/AppTheme.Button" />
 
             <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:progressBarPadding"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/buttonLogin"
-                android:layout_alignParentEnd="true"
-                android:layout_marginStart="10dp"
-                android:layout_marginTop="50dp"
-                android:layout_marginEnd="160dp"
-                android:layout_marginBottom="10dp"
-                android:padding="5dp"
-                android:visibility="invisible"
-                tools:progressDrawable="@color/colorPrimary" />
+                    android:id="@+id/progressBar"
+                    style="?android:progressBarPadding"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/buttonLogin"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="50dp"
+                    android:layout_marginEnd="160dp"
+                    android:layout_marginBottom="10dp"
+                    android:padding="5dp"
+                    android:visibility="invisible"
+                    tools:progressDrawable="@color/colorPrimary" />
 
         </RelativeLayout>
 
         <include
-            android:id="@+id/include"
-            layout="@layout/toolbar" />
+                android:id="@+id/include"
+                layout="@layout/toolbar" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

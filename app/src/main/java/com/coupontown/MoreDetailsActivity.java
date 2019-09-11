@@ -1,27 +1,19 @@
 package com.coupontown;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
-import androidx.appcompat.app.AlertDialog;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import com.coupontown.model.ItemOfferModel;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.like.LikeButton;
-import com.squareup.picasso.Picasso;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MoreDetailsActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -67,16 +59,22 @@ public class MoreDetailsActivity extends AppCompatActivity implements View.OnCli
         textView.setText(itemdetails.getMoreDetails().getDetail_desc());
 
 
-
-        Button button = contentmoredetails.findViewById(R.id.button);
+        final Button button = contentmoredetails.findViewById(R.id.button);
+        final ProgressBar progressBar = findViewById(R.id.progressBar);
         PackageManager packageManager = this.getPackageManager();
-        final Intent intent = packageManager.getLaunchIntentForPackage(itemdetails.getMoreDetails().getAppurl());
+        //  final Intent intent = packageManager.getLaunchIntentForPackage(itemdetails.getMoreDetails().getAppurl());
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                AlertDialog alertDialog = new AlertDialog.Builder(MoreDetailsActivity.this).create(); //Read Update
-                alertDialog.setTitle("CouponCode");
-                alertDialog.setMessage("1234567899");
-                alertDialog.show();  //<-- See This!
+                button.setBackgroundResource(R.color.colorBlue);
+                progressBar.setVisibility(View.VISIBLE);
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        button.setText("1234567890");
+                        progressBar.setVisibility(View.INVISIBLE);
+                    }
+                }, 2000);
             }
 
         });

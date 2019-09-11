@@ -16,17 +16,16 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.coupontown.MoreDetailsActivity;
 import com.coupontown.R;
-import com.coupontown.model.Favourite;
 import com.coupontown.model.ItemOfferModel;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.like.LikeButton;
 import com.like.OnLikeListener;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerViewAdapter.ItemViewHolder> implements Filterable {
 
@@ -148,8 +147,8 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
 
                     ArrayList<ItemOfferModel> filteredList = new ArrayList<>();
                     for (ItemOfferModel itemOfferModel : mFilteredList) {
-                        if (itemOfferModel.getName().toLowerCase().contains(charString) ||
-                                itemOfferModel.getCategory().toLowerCase().contains(charString)) {
+                        if (itemOfferModel.getName().toLowerCase(Locale.getDefault()).contains(charString) ||
+                                itemOfferModel.getCategory().toLowerCase(Locale.getDefault()).contains(charString)) {
                             filteredList.add(itemOfferModel);
                         }
                     }
